@@ -4,6 +4,7 @@ import path from "node:path";
 
 export default defineConfig({
   root: path.resolve(__dirname, "mobile"),
+  publicDir: path.resolve(__dirname, "public"),
   plugins: [react()],
   base: "./",
   build: {

@@ -205,6 +205,15 @@ button:focus-visible {
   color: #ff79c4;
 }
 
+.wallet .music-wallet {
+  max-width: 135px;
+  overflow: hidden;
+  color: #9defff;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .wallet b {
   color: var(--gold);
 }

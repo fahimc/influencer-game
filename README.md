@@ -14,6 +14,7 @@ This is an original fictional game. It is not affiliated with TikTok or any othe
 - Use the seven on-screen move buttons or keyboard keys `1`–`7`.
 - Switch moves to grow the combo; repeating a move cools it down.
 - Use **Silly** and **Robot** moves to boost views.
+- Live shows play the included two-track background playlist and automatically continue to the next song.
 - Tap the shield on an unkind simulated comment before it lowers popularity and viewers.
 - Reach 10, 100, and 1,000 career views and likes to unlock stars, rewards, and outfits.
 - Hit a move while the beat orb flashes for a timing bonus.

@@ -149,6 +149,10 @@ const MILESTONES: Milestone[] = [
 ];
 
 const REACTIONS = ["💖", "⭐", "✨", "🎁", "💬", "🔥"];
+const BACKGROUND_TRACKS = [
+  { title: "Bubble Pop Loop", src: "/music/bubble-pop-loop.mp3" },
+  { title: "Sylhet Bangladesh", src: "/music/sylhet-bangladesh.mp3" },
+] as const;
 
 function compact(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -262,6 +266,7 @@ export default function StarSparkGame() {
   const [feedback, setFeedback] = useState("Ready to shine?");
   const [beat, setBeat] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [backgroundTrack, setBackgroundTrack] = useState(0);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [liveComments, setLiveComments] = useState<LiveComment[]>([]);
   const [popularity, setPopularity] = useState(55);
@@ -283,6 +288,7 @@ export default function StarSparkGame() {
   const checkpointRef = useRef(0);
   const reactionIdRef = useRef(0);
   const audioRef = useRef<AudioContext | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   const usedMovesRef = useRef(new Set<MoveId>());
   const commentIdRef = useRef(0);
   const commentTurnRef = useRef(0);
@@ -300,6 +306,7 @@ export default function StarSparkGame() {
   const creatorHandle = `@${creatorName.toLowerCase().replace(/[^a-z0-9]+/g, "") || "zoe"}spark`;
   const creatorRank =
     fans >= 10_000 ? "Creator Icon" : fans >= 1_000 ? "Rising Star" : fans >= 100 ? "New Favourite" : "Fresh Creator";
+  const currentTrack = BACKGROUND_TRACKS[backgroundTrack];
 
   const playTone = useCallback(
     (perfect = false) => {
@@ -343,7 +350,52 @@ export default function StarSparkGame() {
     }, 1500);
   }, []);
 
+  useEffect(() => {
+    const music = new Audio();
+    music.preload = "auto";
+    music.volume = 0.28;
+    const playNextTrack = () => {
+      setBackgroundTrack((current) => (current + 1) % BACKGROUND_TRACKS.length);
+    };
+    music.addEventListener("ended", playNextTrack);
+    musicRef.current = music;
+    return () => {
+      music.pause();
+      music.removeEventListener("ended", playNextTrack);
+      musicRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const music = musicRef.current;
+    if (!music || typeof window === "undefined") return;
+    const shouldPlay = appScreen === "live" && status === "playing" && soundOn;
+    if (!shouldPlay) {
+      music.pause();
+      return;
+    }
+    const trackUrl = new URL(currentTrack.src, window.location.href).href;
+    if (music.src !== trackUrl) {
+      music.src = currentTrack.src;
+      music.load();
+    }
+    void music.play().catch(() => {
+      // Mobile browsers may wait for the next player tap before allowing audio.
+    });
+  }, [appScreen, currentTrack.src, soundOn, status]);
+
   const startGame = useCallback(() => {
+    const music = musicRef.current;
+    if (music && soundOn && typeof window !== "undefined") {
+      const trackUrl = new URL(currentTrack.src, window.location.href).href;
+      if (music.src !== trackUrl) {
+        music.src = currentTrack.src;
+        music.load();
+      }
+      void music.play().catch(() => {
+        // The next live-screen interaction will retry playback if required.
+      });
+    }
     setAppScreen("live");
     setStatus("playing");
     setTimeLeft(currentLevel.roundSeconds);
@@ -379,7 +431,7 @@ export default function StarSparkGame() {
     beatAtRef.current = Date.now();
     lastActionRef.current = 0;
     playTone(true);
-  }, [currentLevel, playTone]);
+  }, [currentLevel, currentTrack.src, playTone, soundOn]);
 
   const finishCustomization = useCallback(() => {
     const safeName = draftCreatorName.trim().slice(0, 18) || "Zoe";
@@ -406,6 +458,9 @@ export default function StarSparkGame() {
       const now = Date.now();
       if (now - lastActionRef.current < 180) return;
       lastActionRef.current = now;
+      if (soundOn && musicRef.current?.paused) {
+        void musicRef.current.play().catch(() => {});
+      }
 
       const distanceFromBeat = Math.abs(now - beatAtRef.current);
       const perfect = distanceFromBeat < 155;
@@ -506,6 +561,7 @@ export default function StarSparkGame() {
       playTone,
       playerLevel,
       popularity,
+      soundOn,
       status,
       trendingMove,
     ],
@@ -951,11 +1007,13 @@ export default function StarSparkGame() {
         <div className="wallet">
           <span><b>★</b> {compact(stars)}</span>
           <span className="fan-wallet">♥ {compact(fans)}</span>
+          <span className="music-wallet">♫ {currentTrack.title}</span>
           <button
             type="button"
             className="icon-button"
             onClick={() => setSoundOn((current) => !current)}
-            aria-label={soundOn ? "Mute sound" : "Turn sound on"}
+            aria-label={soundOn ? "Mute music and sound" : "Turn music and sound on"}
+            title={soundOn ? `Now playing: ${currentTrack.title}` : "Music is muted"}
           >
             {soundOn ? "🔊" : "🔇"}
           </button>

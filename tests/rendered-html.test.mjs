@@ -49,4 +49,6 @@ test("includes the creator journey and kid-safe live systems", async () => {
   assert.match(source, /View my profile/);
   assert.match(source, /Performance snapshots saved after every live/);
   assert.match(source, /Kid-safe comment moderation/);
+  assert.match(source, /bubble-pop-loop\.mp3/);
+  assert.match(source, /sylhet-bangladesh\.mp3/);
 });
