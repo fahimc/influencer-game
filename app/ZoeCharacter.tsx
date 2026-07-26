@@ -230,52 +230,98 @@ export default function ZoeCharacter() {
         <g transform="translate(0 -247)">
           <g className="zoe-head">
             <path
-              d="M-75 -32 C-92 3 -85 66 -58 88 C-30 112 31 111 60 86 C87 62 91 0 74 -35 C48 -76 -45 -78 -75 -32Z"
-              fill="url(#zoe-hair)"
-              stroke="#4e214b"
-              strokeWidth="5"
-            />
-            <g className="zoe-bun zoe-bun-left">
-              <circle cx="-65" cy="-67" r="43" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
-              <path d="M-93 -72 Q-64 -96 -36 -70 M-88 -52 Q-65 -77 -41 -50" fill="none" stroke="#a95424" strokeWidth="7" strokeLinecap="round" opacity=".7" />
-            </g>
-            <g className="zoe-bun zoe-bun-right">
-              <circle cx="65" cy="-67" r="43" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
-              <path d="M37 -72 Q66 -96 94 -70 M42 -52 Q65 -77 89 -50" fill="none" stroke="#a95424" strokeWidth="7" strokeLinecap="round" opacity=".7" />
-            </g>
-
-            <ellipse cx="0" cy="9" rx="69" ry="78" fill="url(#zoe-skin)" stroke="#4e214b" strokeWidth="5" />
-            <ellipse cx="-68" cy="13" rx="13" ry="20" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
-            <ellipse cx="68" cy="13" rx="13" ry="20" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
-            <path
-              d="M-69 -23 C-59 -64 -15 -70 8 -47 C33 -75 70 -52 70 -17 C49 -35 29 -37 8 -23 C-15 -44 -41 -40 -69 -23Z"
+              d="M-74 22 C-92 -8 -84 -54 -54 -75 C-27 -95 20 -96 51 -77 C83 -58 93 -10 74 25 C68 -9 55 -34 33 -47 C10 -61 -24 -58 -46 -42 C-63 -29 -70 -8 -74 22Z"
               fill="url(#zoe-hair)"
               stroke="#4e214b"
               strokeWidth="5"
               strokeLinejoin="round"
             />
-            <path d="M7 -47 Q18 -19 5 2" fill="none" stroke="#ad5425" strokeWidth="7" strokeLinecap="round" opacity=".75" />
+            <g className="zoe-bun zoe-bun-left">
+              <path
+                d="M-102 -71 C-105 -94 -88 -111 -68 -108 C-51 -117 -31 -103 -30 -84 C-19 -69 -29 -47 -47 -43 C-58 -31 -82 -36 -87 -50 C-97 -52 -103 -60 -102 -71Z"
+                fill="url(#zoe-hair)"
+                stroke="#4e214b"
+                strokeWidth="5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M-91 -79 C-78 -99 -50 -99 -39 -79 C-31 -64 -46 -49 -62 -51 C-77 -53 -82 -68 -72 -77 C-63 -85 -48 -80 -48 -70"
+                fill="none"
+                stroke="#ad5425"
+                strokeWidth="7"
+                strokeLinecap="round"
+                opacity=".72"
+              />
+            </g>
+            <g className="zoe-bun zoe-bun-right">
+              <path
+                d="M102 -71 C105 -94 88 -111 68 -108 C51 -117 31 -103 30 -84 C19 -69 29 -47 47 -43 C58 -31 82 -36 87 -50 C97 -52 103 -60 102 -71Z"
+                fill="url(#zoe-hair)"
+                stroke="#4e214b"
+                strokeWidth="5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M91 -79 C78 -99 50 -99 39 -79 C31 -64 46 -49 62 -51 C77 -53 82 -68 72 -77 C63 -85 48 -80 48 -70"
+                fill="none"
+                stroke="#ad5425"
+                strokeWidth="7"
+                strokeLinecap="round"
+                opacity=".72"
+              />
+            </g>
 
-            <path d="M-48 -1 Q-29 -12 -11 -3" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
-            <path d="M12 -3 Q30 -12 49 -1" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
-            <ellipse cx="-30" cy="18" rx="17" ry="20" fill="white" stroke="#6f3a42" strokeWidth="3" />
-            <ellipse cx="30" cy="18" rx="17" ry="20" fill="white" stroke="#6f3a42" strokeWidth="3" />
-            <ellipse cx="-28" cy="20" rx="10" ry="13" fill="#5b301b" />
-            <ellipse cx="28" cy="20" rx="10" ry="13" fill="#5b301b" />
-            <ellipse cx="-27" cy="22" rx="5" ry="8" fill="#170c15" />
-            <ellipse cx="27" cy="22" rx="5" ry="8" fill="#170c15" />
-            <circle cx="-24" cy="16" r="3.5" fill="white" />
-            <circle cx="30" cy="16" r="3.5" fill="white" />
-            <path d="M-2 21 Q-7 38 3 38" fill="none" stroke="#bd6c51" strokeWidth="3" strokeLinecap="round" />
-            <path d="M-24 54 Q0 75 25 53 Q15 84 -2 84 Q-18 82 -24 54Z" fill="#8f3151" stroke="#6c2744" strokeWidth="3" />
-            <path d="M-14 58 Q0 65 15 58" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
-            <path d="M-10 76 Q0 68 11 76" fill="none" stroke="#ff8caf" strokeWidth="5" strokeLinecap="round" />
-            <circle cx="-49" cy="46" r="2.5" fill="#a45f4d" />
-            <circle cx="-40" cy="49" r="2" fill="#a45f4d" />
-            <circle cx="47" cy="46" r="2.5" fill="#a45f4d" />
-            <circle cx="38" cy="49" r="2" fill="#a45f4d" />
-            <path d="M-72 35 Q-86 52 -69 64" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
-            <path d="M72 35 Q86 52 69 64" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
+            <ellipse cx="-66" cy="12" rx="12" ry="19" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
+            <ellipse cx="66" cy="12" rx="12" ry="19" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
+            <path
+              d="M0 -58 C-42 -58 -65 -37 -66 -4 C-68 27 -56 59 -30 77 C-12 90 12 90 30 77 C56 59 68 27 66 -4 C65 -37 42 -58 0 -58Z"
+              fill="url(#zoe-skin)"
+              stroke="#a65539"
+              strokeWidth="4"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M-68 -13 C-65 -48 -38 -70 -5 -65 C10 -72 31 -65 45 -54 C60 -43 68 -27 68 -10 C54 -27 39 -35 20 -36 C3 -36 -10 -28 -19 -17 C-26 -34 -42 -37 -68 -13Z"
+              fill="url(#zoe-hair)"
+              stroke="#4e214b"
+              strokeWidth="5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M-2 -64 C8 -53 9 -38 -1 -26 C13 -37 27 -43 44 -38"
+              fill="none"
+              stroke="#ad5425"
+              strokeWidth="7"
+              strokeLinecap="round"
+              opacity=".78"
+            />
+            <path d="M-55 -25 Q-67 -7 -60 14 M56 -23 Q67 -6 60 14" fill="none" stroke="#4b1c10" strokeWidth="7" strokeLinecap="round" />
+
+            <path d="M-50 -1 Q-30 -14 -10 -2" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
+            <path d="M10 -2 Q30 -14 50 -1" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
+            <path d="M-47 10 Q-53 4 -56 0 M47 10 Q53 4 56 0" fill="none" stroke="#502514" strokeWidth="3" strokeLinecap="round" />
+            <ellipse cx="-30" cy="20" rx="18" ry="23" fill="white" stroke="#6f3a42" strokeWidth="3" />
+            <ellipse cx="30" cy="20" rx="18" ry="23" fill="white" stroke="#6f3a42" strokeWidth="3" />
+            <ellipse cx="-28" cy="22" rx="11" ry="15" fill="#6b371d" />
+            <ellipse cx="28" cy="22" rx="11" ry="15" fill="#6b371d" />
+            <ellipse cx="-27" cy="24" rx="6" ry="10" fill="#170c15" />
+            <ellipse cx="27" cy="24" rx="6" ry="10" fill="#170c15" />
+            <circle cx="-23" cy="17" r="4.5" fill="white" />
+            <circle cx="31" cy="17" r="4.5" fill="white" />
+            <circle cx="-31" cy="29" r="2" fill="#d89b76" opacity=".8" />
+            <circle cx="23" cy="29" r="2" fill="#d89b76" opacity=".8" />
+            <path d="M0 25 Q-4 36 2 37" fill="none" stroke="#bd6c51" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M-24 53 Q0 67 24 53 Q19 81 0 82 Q-19 81 -24 53Z" fill="#8f3151" stroke="#6c2744" strokeWidth="3" />
+            <path d="M-15 56 Q0 62 15 56" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" />
+            <path d="M-10 75 Q0 68 10 75" fill="none" stroke="#ff8caf" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="-49" cy="48" r="2.3" fill="#a45f4d" />
+            <circle cx="-40" cy="51" r="1.8" fill="#a45f4d" />
+            <circle cx="49" cy="48" r="2.3" fill="#a45f4d" />
+            <circle cx="40" cy="51" r="1.8" fill="#a45f4d" />
+            <ellipse cx="-42" cy="42" rx="11" ry="5" fill="#eb7e86" opacity=".24" />
+            <ellipse cx="42" cy="42" rx="11" ry="5" fill="#eb7e86" opacity=".24" />
+            <path d="M-67 34 Q-80 49 -66 60" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
+            <path d="M67 34 Q80 49 66 60" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
 
             <g transform="translate(-58 -29) rotate(-14)">
               <path d="M0 -13 L4 -4 L14 -4 L6 2 L9 12 L0 6 L-9 12 L-6 2 L-14 -4 L-4 -4Z" fill="#b8ff2c" stroke="#538900" strokeWidth="3" strokeLinejoin="round" />
