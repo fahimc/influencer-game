@@ -526,216 +526,84 @@ button:focus-visible {
 .performer {
   position: absolute;
   z-index: 3;
-  top: 36px;
+  top: -4px;
   left: 50%;
-  width: 180px;
-  height: 390px;
+  width: 270px;
+  height: 470px;
   transform-origin: 50% 78%;
   transform: translateX(-50%);
   filter: drop-shadow(0 16px 10px rgba(0,0,0,.3));
 }
 
-.hair-back {
-  position: absolute;
-  z-index: 1;
-  top: 4px;
-  left: 43px;
-  width: 95px;
-  height: 120px;
-  background: #2b1636;
-  border-radius: 54% 54% 42% 42%;
+.zoe-vector {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.hair-back::before,
-.hair-back::after {
-  content: "";
-  position: absolute;
-  top: -18px;
-  width: 57px;
-  height: 57px;
-  background: #2b1636;
-  border: 7px solid #3b1d48;
-  border-radius: 50%;
+.zoe-outline {
+  stroke: #4e214b;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.hair-back::before { left: -20px; }
-.hair-back::after { right: -20px; }
-
-.head {
-  position: absolute;
-  z-index: 5;
-  top: 30px;
-  left: 51px;
-  width: 80px;
-  height: 91px;
-  background: linear-gradient(145deg, #ffc59d, #df855d);
-  border: 3px solid #572d45;
-  border-radius: 45% 45% 48% 48%;
+.zoe-detail {
+  fill: none;
+  stroke: #704068;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.bangs {
-  position: absolute;
-  top: -11px;
-  left: -5px;
-  width: 85px;
-  height: 41px;
-  background: #32173d;
-  border-radius: 55% 65% 40% 45%;
-  transform: rotate(-4deg);
+.zoe-rig-root {
+  transform-box: fill-box;
+  transform-origin: 50% 62%;
 }
 
-.bangs::after {
-  content: "";
-  position: absolute;
-  top: 23px;
-  left: 53px;
-  width: 30px;
-  height: 27px;
-  background: #32173d;
-  border-radius: 0 0 60% 20%;
-  transform: rotate(14deg);
+.zoe-arm,
+.zoe-leg,
+.zoe-head,
+.zoe-bun {
+  transform-box: fill-box;
 }
 
-.ear {
-  position: absolute;
-  top: 38px;
-  width: 13px;
-  height: 19px;
-  background: #eba077;
-  border: 2px solid #572d45;
-  border-radius: 50%;
-}
-
-.ear-left { left: -9px; }
-.ear-right { right: -9px; }
-
-.eye {
-  position: absolute;
-  z-index: 2;
-  top: 44px;
-  width: 14px;
-  height: 18px;
-  background: #332236;
-  border: 4px solid white;
-  border-radius: 50%;
-  box-shadow: inset 1px 1px 0 #12091b;
-}
-
-.eye-left { left: 17px; }
-.eye-right { right: 17px; }
-
-.freckle {
-  position: absolute;
-  top: 63px;
-  left: 11px;
-  color: #9b554b;
-  font-size: 9px;
-  letter-spacing: 17px;
-}
-
-.smile {
-  position: absolute;
-  bottom: 10px;
-  left: 31px;
-  width: 22px;
-  height: 11px;
-  border-bottom: 5px solid #8b2e4d;
-  border-radius: 0 0 20px 20px;
-}
-
-.neck {
-  position: absolute;
-  z-index: 3;
-  top: 113px;
-  left: 78px;
-  width: 27px;
-  height: 26px;
-  background: #e69770;
-}
-
-.body {
-  position: absolute;
-  z-index: 4;
-  top: 129px;
-  left: 45px;
-  width: 92px;
-  height: 110px;
-  background: linear-gradient(145deg, #39d7eb 0 24%, #f7f2ff 25% 79%, #ff4ab8 80%);
-  border: 3px solid #4b285c;
-  border-radius: 24px 24px 31px 31px;
-}
-
-.shirt-star {
-  position: absolute;
-  top: 35px;
-  left: 30px;
-  color: var(--pink);
-  font-size: 31px;
-  text-shadow: 2px 2px 0 #8a3dff;
-}
-
-.arm {
-  position: absolute;
-  z-index: 3;
-  top: 137px;
-  width: 44px;
-  height: 127px;
-  background: linear-gradient(90deg, #20b7d3 0 47%, #eba078 48%);
-  border: 3px solid #4b285c;
-  border-radius: 22px;
-  transform-origin: 50% 12%;
-}
-
-.arm i {
-  position: absolute;
-  bottom: -4px;
-  left: 4px;
-  width: 30px;
-  height: 33px;
-  background: #eca37a;
-  border-radius: 45%;
-}
-
-.arm-left { left: 20px; transform: rotate(30deg); }
-.arm-right { right: 20px; transform: rotate(-28deg); }
-
-.pants {
-  position: absolute;
-  z-index: 4;
-  top: 222px;
-  left: 46px;
-  width: 91px;
-  height: 67px;
-  background: #8054da;
-  border: 3px solid #462651;
-  border-radius: 22px 22px 12px 12px;
-}
-
-.leg {
-  position: absolute;
-  z-index: 3;
-  top: 270px;
-  width: 49px;
-  height: 105px;
-  background: #7650cf;
-  border: 3px solid #462651;
-  border-radius: 19px;
+.zoe-arm {
   transform-origin: 50% 8%;
 }
 
-.leg i {
-  position: absolute;
-  bottom: -12px;
-  left: -6px;
-  width: 61px;
-  height: 28px;
-  background: linear-gradient(180deg, #fff 0 45%, #36cce6 46%);
-  border: 3px solid #462651;
-  border-radius: 18px 18px 8px 8px;
+.zoe-arm-left {
+  transform: rotate(18deg);
 }
 
-.leg-left { left: 44px; transform: rotate(4deg); }
-.leg-right { right: 42px; transform: rotate(-5deg); }
+.zoe-arm-right {
+  transform: rotate(-18deg);
+}
+
+.zoe-leg {
+  transform-origin: 50% 4%;
+}
+
+.zoe-leg-left {
+  transform: rotate(3deg);
+}
+
+.zoe-leg-right {
+  transform: rotate(-3deg);
+}
+
+.zoe-head {
+  transform-origin: 50% 76%;
+}
+
+.zoe-bun {
+  transform-origin: center;
+}
+
+.move-idle .zoe-head {
+  animation: vector-idle 2.2s ease-in-out infinite;
+}
 
 .stage-shadow {
   position: absolute;
@@ -752,9 +620,21 @@ button:focus-visible {
 .move-dance { animation: dance .65s ease both; }
 .move-pose { animation: pose .7s ease both; }
 .move-spin { animation: spin .72s cubic-bezier(.2,.7,.3,1) both; }
-.move-wave .arm-right { animation: wave .55s ease-in-out 2; }
+.move-wave .zoe-arm-right { animation: wave-vector .55s ease-in-out 2; }
 .move-wave { animation: bounce .7s ease both; }
 .move-trend { animation: trend .7s ease both; }
+.move-dance .zoe-arm-left { animation: dance-arm-left .65s ease both; }
+.move-dance .zoe-arm-right { animation: dance-arm-right .65s ease both; }
+.move-dance .zoe-leg-left { animation: dance-leg-left .65s ease both; }
+.move-dance .zoe-leg-right { animation: dance-leg-right .65s ease both; }
+.move-dance .zoe-bun-left { animation: bun-bounce .65s ease both; }
+.move-dance .zoe-bun-right { animation: bun-bounce .65s .05s ease both; }
+.move-pose .zoe-arm-left { animation: pose-arm-left .7s ease both; }
+.move-pose .zoe-arm-right { animation: pose-arm-right .7s ease both; }
+.move-pose .zoe-head { animation: pose-head .7s ease both; }
+.move-spin .zoe-bun { animation: bun-spin .72s ease both; }
+.move-trend .zoe-arm-left { animation: trend-arm-left .7s ease both; }
+.move-trend .zoe-arm-right { animation: trend-arm-right .7s ease both; }
 
 .feedback-burst {
   position: absolute;
@@ -1351,9 +1231,11 @@ footer p {
   50% { transform: translateX(-50%) rotateY(180deg) scale(.92); }
   100% { transform: translateX(-50%) rotateY(360deg); }
 }
-@keyframes wave {
-  0%, 100% { transform: rotate(-28deg); }
-  50% { transform: rotate(-135deg) translateY(-6px); }
+@keyframes wave-vector {
+  0%, 100% { transform: rotate(-18deg); }
+  28% { transform: rotate(-142deg); }
+  52% { transform: rotate(-112deg); }
+  78% { transform: rotate(-145deg); }
 }
 @keyframes bounce {
   45% { transform: translateX(-50%) translateY(-18px) rotate(3deg); }
@@ -1362,6 +1244,56 @@ footer p {
   0% { transform: translateX(-50%); }
   35% { transform: translateX(-50%) scale(1.08) rotate(-8deg); filter: drop-shadow(0 0 25px #fff16d); }
   70% { transform: translateX(-50%) scale(1.08) rotate(8deg); filter: drop-shadow(0 0 25px #ff4fbd); }
+}
+@keyframes vector-idle {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-3px) rotate(1deg); }
+}
+@keyframes dance-arm-left {
+  0%, 100% { transform: rotate(18deg); }
+  38% { transform: rotate(76deg); }
+  72% { transform: rotate(-18deg); }
+}
+@keyframes dance-arm-right {
+  0%, 100% { transform: rotate(-18deg); }
+  38% { transform: rotate(-65deg); }
+  72% { transform: rotate(26deg); }
+}
+@keyframes dance-leg-left {
+  0%, 100% { transform: rotate(3deg); }
+  45% { transform: rotate(13deg) translateY(-5px); }
+}
+@keyframes dance-leg-right {
+  0%, 100% { transform: rotate(-3deg); }
+  45% { transform: rotate(-15deg) translateY(4px); }
+}
+@keyframes bun-bounce {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.13) translateY(-4px); }
+}
+@keyframes pose-arm-left {
+  0%, 100% { transform: rotate(18deg); }
+  42%, 78% { transform: rotate(118deg); }
+}
+@keyframes pose-arm-right {
+  0%, 100% { transform: rotate(-18deg); }
+  42%, 78% { transform: rotate(-132deg); }
+}
+@keyframes pose-head {
+  0%, 100% { transform: rotate(0); }
+  42%, 78% { transform: rotate(7deg) translateY(-2px); }
+}
+@keyframes bun-spin {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(.83); }
+}
+@keyframes trend-arm-left {
+  0%, 100% { transform: rotate(18deg); }
+  35%, 75% { transform: rotate(105deg); }
+}
+@keyframes trend-arm-right {
+  0%, 100% { transform: rotate(-18deg); }
+  35%, 75% { transform: rotate(-105deg); }
 }
 @keyframes feedback {
   from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(.7) rotate(-4deg); }

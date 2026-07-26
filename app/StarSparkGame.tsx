@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ZoeCharacter from "./ZoeCharacter";
 
 type GameStatus = "ready" | "playing" | "paused" | "finished";
 type MoveId = "dance" | "pose" | "spin" | "wave" | "trend";
@@ -356,25 +357,7 @@ export default function StarSparkGame() {
 
             <div className="avatar-zone">
               <div key={animationKey} className={`performer move-${activeMove ?? "idle"}`} aria-label="Zoe performing">
-                <div className="hair-back" />
-                <div className="head">
-                  <i className="ear ear-left" />
-                  <i className="ear ear-right" />
-                  <div className="bangs" />
-                  <span className="eye eye-left" />
-                  <span className="eye eye-right" />
-                  <span className="freckle">•••</span>
-                  <span className="smile" />
-                </div>
-                <div className="neck" />
-                <div className="body">
-                  <span className="shirt-star">★</span>
-                </div>
-                <div className="arm arm-left"><i /></div>
-                <div className="arm arm-right"><i /></div>
-                <div className="pants" />
-                <div className="leg leg-left"><i /></div>
-                <div className="leg leg-right"><i /></div>
+                <ZoeCharacter />
               </div>
               <div className="stage-shadow" />
             </div>
