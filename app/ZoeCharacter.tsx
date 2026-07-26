@@ -66,161 +66,153 @@ export default function ZoeCharacter() {
       </defs>
 
       <g className="zoe-rig-root" transform="translate(210 365)" filter="url(#zoe-shadow)">
-        <g transform="translate(-44 10)">
+        <g transform="translate(-35 19)">
           <g className="zoe-leg zoe-leg-left">
             <path
-              d="M-38 -12 C-47 32 -45 93 -35 139 C-16 152 14 152 34 139 C43 92 45 35 38 -12 C15 -24 -16 -24 -38 -12Z"
+              d="M-35 4 C-43 48 -46 101 -40 151 C-37 187 -43 227 -31 258 C-18 271 16 271 29 258 C38 226 33 186 31 150 C35 99 36 47 28 4 C9 -7 -16 -7 -35 4Z"
               fill="url(#zoe-pants)"
               className="zoe-outline"
             />
-            <path d="M-30 17 Q0 5 31 17" className="zoe-detail" opacity=".55" />
-            <rect
-              x="-46"
-              y="38"
-              width="45"
-              height="57"
-              rx="11"
+            <path d="M-31 29 Q-3 17 26 27 M-34 164 Q-3 177 29 163 M-31 224 Q-2 211 28 224" className="zoe-detail" opacity=".42" />
+            <path
+              d="M-43 79 Q-20 67 3 78 L1 137 Q-19 148 -40 137Z"
               fill="#842987"
               stroke="#4e214b"
               strokeWidth="3"
-              transform="rotate(4 -23 66)"
+              strokeLinejoin="round"
             />
-            <path d="M-36 50 H-9" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" />
-            <g transform="translate(-21 69)">
+            <path d="M-37 91 Q-18 84 -1 90" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
+            <g transform="translate(-21 113)">
               <circle r="14" fill="#ffd928" stroke="#8b5610" strokeWidth="3" />
               <circle cx="-5" cy="-3" r="2.2" fill="#4b2c13" />
               <circle cx="5" cy="-3" r="2.2" fill="#4b2c13" />
               <path d="M-7 4 Q0 10 7 4" fill="none" stroke="#4b2c13" strokeWidth="2.4" strokeLinecap="round" />
             </g>
-            <g transform="translate(0 132)">
+            <path d="M-29 251 Q-2 262 27 251" fill="none" stroke="#e45acc" strokeWidth="8" strokeLinecap="round" />
+            <g transform="translate(-2 255)">
               <path
-                d="M-34 -5 C-38 36 -36 99 -29 143 C-12 154 12 154 29 143 C36 99 37 36 33 -5 C14 -16 -15 -16 -34 -5Z"
-                fill="url(#zoe-pants-dark)"
+                d="M-27 -5 C-30 15 -36 31 -48 46 C-56 56 -52 70 -38 74 H39 C54 73 59 61 52 50 C43 38 25 29 22 -5 C7 -13 -12 -13 -27 -5Z"
+                fill="url(#zoe-shoe)"
                 className="zoe-outline"
               />
-              <path d="M-26 23 Q0 12 26 23 M-24 103 Q0 116 25 103" className="zoe-detail" opacity=".4" />
-              <path d="M-27 138 Q0 151 27 138" fill="none" stroke="#e45acc" strokeWidth="5" />
-              <g transform="translate(0 139)">
-                <path
-                  d="M-31 -7 C-34 13 -44 37 -55 49 C-63 60 -57 74 -42 77 H38 C56 76 62 65 54 53 C44 41 27 31 22 -5 C6 -15 -15 -15 -31 -7Z"
-                  fill="url(#zoe-shoe)"
-                  className="zoe-outline"
-                />
-                <path d="M-47 54 Q0 70 50 52" fill="none" stroke="#ff4eae" strokeWidth="9" strokeLinecap="round" />
-                <path d="M-25 1 L13 37 L27 7" fill="url(#zoe-teal)" stroke="#178ea7" strokeWidth="3" strokeLinejoin="round" />
-                <path d="M-16 14 H15 M-11 24 H20 M-4 34 H25" stroke="#e13c9e" strokeWidth="3" strokeLinecap="round" />
-              </g>
+              <path d="M-43 52 Q1 65 48 50" fill="none" stroke="#ff4eae" strokeWidth="8" strokeLinecap="round" />
+              <path d="M-23 1 L11 34 L26 6" fill="url(#zoe-teal)" stroke="#178ea7" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M-16 11 H13 M-12 20 H18 M-7 29 H21" stroke="#e13c9e" strokeWidth="3" strokeLinecap="round" />
+              <path d="M-24 38 Q2 47 31 37" fill="none" stroke="#baa8c7" strokeWidth="3" />
             </g>
           </g>
         </g>
 
-        <g transform="translate(44 10)">
+        <g transform="translate(35 19)">
           <g className="zoe-leg zoe-leg-right">
             <path
-              d="M-38 -12 C-45 35 -43 92 -34 139 C-15 152 15 152 34 139 C44 93 46 33 39 -12 C16 -24 -15 -24 -38 -12Z"
+              d="M-28 4 C-36 47 -35 99 -31 150 C-33 186 -38 226 -29 258 C-16 271 18 271 31 258 C43 227 37 187 40 151 C46 101 43 48 35 4 C16 -7 -9 -7 -28 4Z"
               fill="url(#zoe-pants)"
               className="zoe-outline"
             />
-            <path d="M-30 17 Q0 5 31 17" className="zoe-detail" opacity=".55" />
-            <rect
-              x="3"
-              y="40"
-              width="45"
-              height="59"
-              rx="11"
+            <path d="M-26 27 Q3 17 31 29 M-29 163 Q3 177 34 164 M-28 224 Q2 211 31 224" className="zoe-detail" opacity=".42" />
+            <path
+              d="M-3 78 Q20 67 43 79 L40 137 Q19 148 -1 137Z"
               fill="#842987"
               stroke="#4e214b"
               strokeWidth="3"
-              transform="rotate(-4 25 69)"
+              strokeLinejoin="round"
             />
-            <path d="M11 52 H39" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" />
-            <g transform="translate(0 132)">
+            <path d="M1 90 Q18 84 37 91" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
+            <path d="M-27 251 Q2 262 29 251" fill="none" stroke="#e45acc" strokeWidth="8" strokeLinecap="round" />
+            <g transform="translate(2 255)">
               <path
-                d="M-33 -5 C-37 37 -35 98 -29 143 C-12 154 11 154 28 143 C35 101 37 35 34 -5 C15 -16 -15 -16 -33 -5Z"
-                fill="url(#zoe-pants-dark)"
+                d="M-22 -5 C-25 29 -43 38 -52 50 C-59 61 -54 73 -39 74 H38 C52 70 56 56 48 46 C36 31 30 15 27 -5 C12 -13 -7 -13 -22 -5Z"
+                fill="url(#zoe-shoe)"
                 className="zoe-outline"
               />
-              <path d="M-25 23 Q0 12 26 23 M-24 103 Q0 116 25 103" className="zoe-detail" opacity=".4" />
-              <path d="M-27 138 Q0 151 27 138" fill="none" stroke="#e45acc" strokeWidth="5" />
-              <g transform="translate(0 139)">
-                <path
-                  d="M-22 -5 C-27 31 -44 41 -54 54 C-61 65 -55 76 -38 77 H43 C58 74 63 60 55 49 C44 37 34 13 31 -7 C15 -15 -6 -15 -22 -5Z"
-                  fill="url(#zoe-shoe)"
-                  className="zoe-outline"
-                />
-                <path d="M-49 52 Q0 69 48 54" fill="none" stroke="#ff4eae" strokeWidth="9" strokeLinecap="round" />
-                <path d="M-27 7 L-13 37 L25 1" fill="url(#zoe-teal)" stroke="#178ea7" strokeWidth="3" strokeLinejoin="round" />
-                <path d="M-25 14 H6 M-20 24 H11 M-15 34 H14" stroke="#e13c9e" strokeWidth="3" strokeLinecap="round" />
-              </g>
-            </g>
-          </g>
-        </g>
-
-        <g transform="translate(-84 -112)">
-          <g className="zoe-arm zoe-arm-left">
-            <path
-              d="M-25 -7 C-42 15 -43 54 -34 91 C-27 116 -14 132 2 132 C20 128 31 108 35 84 C40 49 37 10 24 -8 C8 -19 -10 -19 -25 -7Z"
-              fill="url(#zoe-hoodie)"
-              className="zoe-outline"
-            />
-            <path d="M-29 30 Q0 14 30 29" className="zoe-detail" opacity=".45" />
-            <path d="M-32 80 Q0 66 34 79" fill="none" stroke="#2cc8d8" strokeWidth="8" />
-            <g transform="translate(1 119)">
-              <path
-                d="M-21 8 C-26 24 -22 45 -10 58 C-2 68 11 68 19 58 C26 49 25 36 21 23 L15 7 C12 0 5 3 7 11 L9 24 L4 4 C2 -3 -5 -1 -4 7 L-2 24 L-9 7 C-12 0 -19 3 -15 11 L-10 28 L-17 15 C-22 8 -27 14 -21 24Z"
-                fill="url(#zoe-skin)"
-                stroke="#a65539"
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
+              <path d="M-48 50 Q-1 65 43 52" fill="none" stroke="#ff4eae" strokeWidth="8" strokeLinecap="round" />
+              <path d="M-26 6 L-11 34 L23 1" fill="url(#zoe-teal)" stroke="#178ea7" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M-21 11 H8 M-18 20 H12 M-14 29 H17" stroke="#e13c9e" strokeWidth="3" strokeLinecap="round" />
+              <path d="M-31 37 Q-2 47 24 38" fill="none" stroke="#baa8c7" strokeWidth="3" />
             </g>
           </g>
         </g>
 
         <path
-          d="M-72 -116 C-70 -161 -43 -179 0 -179 C44 -179 70 -159 72 -116 L48 -91 H-48Z"
+          d="M-55 -18 C-59 -8 -61 2 -60 14 C-35 29 35 29 60 14 C61 2 59 -8 55 -18Z"
+          fill="url(#zoe-skin)"
+          stroke="#a65539"
+          strokeWidth="3"
+        />
+        <path d="M0 6 Q-3 10 0 13" fill="none" stroke="#a65539" strokeWidth="2.5" strokeLinecap="round" />
+        <path
+          d="M-66 10 Q0 -3 66 10 L62 43 Q0 53 -62 43Z"
+          fill="url(#zoe-pants)"
+          className="zoe-outline"
+        />
+        <path d="M-64 22 Q0 10 64 22" fill="none" stroke="#e969d1" strokeWidth="4" />
+        <circle cx="0" cy="20" r="8" fill="#ded2e7" stroke="#5c245b" strokeWidth="3" />
+        <path d="M-44 13 V38 M44 13 V38 M-17 12 V39 M17 12 V39" fill="none" stroke="#63206e" strokeWidth="3" />
+        <path d="M-57 40 C-53 57 -44 67 -31 74" fill="none" stroke="#d4d0dd" strokeWidth="4" strokeLinecap="round" />
+        <path d="M-56 42 C-48 56 -40 66 -29 73" fill="none" stroke="#5c5063" strokeWidth="7" strokeDasharray="2 8" strokeLinecap="round" />
+
+        <g transform="translate(-78 -120)">
+          <g className="zoe-arm zoe-arm-left">
+            <path
+              d="M-12 -8 C-35 -2 -44 26 -45 56 C-47 86 -38 110 -26 126 C-17 137 2 137 12 126 C25 110 31 84 28 57 C26 27 18 -2 6 -9 C0 -13 -6 -12 -12 -8Z"
+              fill="url(#zoe-hoodie)"
+              className="zoe-outline"
+            />
+            <path d="M-38 32 Q-7 17 23 31 M-37 88 Q-6 76 24 89" className="zoe-detail" opacity=".38" />
+            <path d="M-29 113 Q-7 103 16 114 L12 133 Q-8 142 -27 131Z" fill="#e7ddea" stroke="#a593b3" strokeWidth="3" />
+            <g transform="translate(-7 128)">
+              <path
+                d="M-14 -3 C-17 11 -19 28 -18 43 C-18 55 -12 63 -6 60 C-1 58 0 50 -1 43 L0 54 C1 63 8 65 11 58 C13 53 10 43 10 36 L13 40 C17 46 24 43 24 37 C24 32 18 26 15 20 L12 10 C9 0 4 -5 -14 -3Z"
+                fill="url(#zoe-skin)"
+                stroke="#a65539"
+                strokeWidth="3"
+                strokeLinejoin="round"
+              />
+              <path d="M-11 15 L-11 48 M-5 14 L-4 52 M2 14 L4 51" fill="none" stroke="#bd6c51" strokeWidth="2" strokeLinecap="round" />
+            </g>
+          </g>
+        </g>
+
+        <path
+          d="M-68 -116 C-65 -153 -42 -170 0 -170 C42 -170 65 -153 68 -116 L48 -94 H-48Z"
           fill="#c5b5d3"
           stroke="#4e214b"
           strokeWidth="4"
         />
         <path
-          d="M-73 -126 C-94 -95 -91 -37 -72 8 C-33 29 33 29 72 8 C92 -39 94 -95 73 -126 C37 -145 -37 -145 -73 -126Z"
+          d="M-68 -125 C-81 -104 -79 -57 -63 -20 C-34 -8 34 -8 63 -20 C79 -57 81 -104 68 -125 C36 -141 -36 -141 -68 -125Z"
           fill="url(#zoe-hoodie)"
           className="zoe-outline"
         />
-        <path d="M-70 -80 Q0 -60 70 -80 M-62 2 Q0 17 62 2" className="zoe-detail" opacity=".45" />
-        <path d="M-73 -108 L-53 -98" stroke="#2ed8ef" strokeWidth="13" strokeLinecap="round" />
-        <path d="M73 -108 L53 -98" stroke="#ff4eb3" strokeWidth="13" strokeLinecap="round" />
-        <path d="M-34 7 Q0 20 34 7" fill="none" stroke="#a693b8" strokeWidth="8" strokeLinecap="round" />
-        <path d="M-48 14 Q0 34 48 14" fill="none" stroke="#4e214b" strokeWidth="4" strokeLinecap="round" />
-        <path
-          d="M0 -95 L11 -70 L39 -68 L18 -50 L25 -22 L0 -37 L-25 -22 L-18 -50 L-39 -68 L-11 -70Z"
-          fill="url(#zoe-pink)"
-          stroke="#7d246d"
-          strokeWidth="4"
-          strokeLinejoin="round"
-        />
-        <path d="M-19 -141 Q-10 -121 -9 -99 M19 -141 Q10 -121 9 -99" fill="none" stroke="#7a627f" strokeWidth="4" strokeLinecap="round" />
-        <circle cx="-19" cy="-142" r="5" fill="#2ed8ef" />
-        <circle cx="19" cy="-142" r="5" fill="#ff4eb3" />
+        <path d="M-64 -83 Q0 -65 64 -83 M-57 -24 Q0 -14 57 -24" className="zoe-detail" opacity=".38" />
+        <text x="0" y="-65" textAnchor="middle" fontSize="30" fontWeight="1000" fill="#f43ba5" stroke="white" strokeWidth="1.5" paintOrder="stroke">BE</text>
+        <text x="0" y="-36" textAnchor="middle" fontSize="29" fontWeight="1000" fill="#7947dc" stroke="white" strokeWidth="1.5" paintOrder="stroke">YOU!</text>
+        <path d="M-42 -84 l-8 -8 M44 -56 l10 -4 M-42 -47 l-10 7 M39 -89 l7 -9" fill="none" stroke="#29cbd8" strokeWidth="5" strokeLinecap="round" />
+        <path d="M-17 -135 Q-10 -113 -8 -92 M17 -135 Q10 -113 8 -92" fill="none" stroke="#7a627f" strokeWidth="4" strokeLinecap="round" />
+        <circle cx="-17" cy="-136" r="5" fill="#aee72b" />
+        <circle cx="17" cy="-136" r="5" fill="#ff4eb3" />
 
-        <g transform="translate(84 -112)">
+        <g transform="translate(78 -120)">
           <g className="zoe-arm zoe-arm-right">
             <path
-              d="M-24 -8 C-38 10 -41 49 -35 84 C-31 108 -20 128 -2 132 C15 132 28 116 35 91 C44 54 42 15 25 -7 C10 -19 -8 -19 -24 -8Z"
+              d="M-6 -9 C-18 -2 -26 27 -28 57 C-31 84 -25 110 -12 126 C-2 137 17 137 26 126 C38 110 47 86 45 56 C44 26 35 -2 12 -8 C6 -12 0 -13 -6 -9Z"
               fill="url(#zoe-hoodie)"
               className="zoe-outline"
             />
-            <path d="M-30 29 Q0 14 29 30" className="zoe-detail" opacity=".45" />
-            <path d="M-34 79 Q0 66 32 80" fill="none" stroke="#ff4eb3" strokeWidth="8" />
-            <g transform="translate(-1 119)">
-              <path
-                d="M-22 20 C-26 8 -16 2 -8 10 L-3 22 L-7 -16 C-8 -24 2 -26 4 -18 L8 10 L14 -13 C16 -22 27 -19 25 -10 L20 19 C27 28 27 44 17 56 C8 68 -9 68 -19 57 C-28 48 -29 33 -22 20Z"
-                fill="url(#zoe-skin)"
-                stroke="#a65539"
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
+            <path d="M-23 31 Q7 17 38 32 M-24 89 Q6 76 37 88" className="zoe-detail" opacity=".38" />
+            <path d="M-16 114 Q7 103 29 113 L27 131 Q8 142 -12 133Z" fill="#e7ddea" stroke="#a593b3" strokeWidth="3" />
+            <g transform="translate(7 128)">
+              <g transform="scale(-1 1)">
+                <path
+                  d="M-14 -3 C-17 11 -19 28 -18 43 C-18 55 -12 63 -6 60 C-1 58 0 50 -1 43 L0 54 C1 63 8 65 11 58 C13 53 10 43 10 36 L13 40 C17 46 24 43 24 37 C24 32 18 26 15 20 L12 10 C9 0 4 -5 -14 -3Z"
+                  fill="url(#zoe-skin)"
+                  stroke="#a65539"
+                  strokeWidth="3"
+                  strokeLinejoin="round"
+                />
+                <path d="M-11 15 L-11 48 M-5 14 L-4 52 M2 14 L4 51" fill="none" stroke="#bd6c51" strokeWidth="2" strokeLinecap="round" />
+              </g>
             </g>
           </g>
         </g>

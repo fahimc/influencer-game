@@ -574,11 +574,11 @@ button:focus-visible {
 }
 
 .zoe-arm-left {
-  transform: rotate(18deg);
+  transform: rotate(9deg);
 }
 
 .zoe-arm-right {
-  transform: rotate(-18deg);
+  transform: rotate(-9deg);
 }
 
 .zoe-leg {
