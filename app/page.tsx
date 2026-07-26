@@ -14,19 +14,19 @@ export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = `${protocol}://${host}`;
 
   return {
-    title: "StarSpark Live — Rhythm Combo Game",
+    title: "StarSpark Live — Creator Adventure",
     description:
-      "Dance, pose, spin and wave your way to a sparkling high score in this kid-safe creator game.",
+      "Create your character, build a fictional creator profile, and perform kid-safe live rhythm shows.",
     metadataBase: new URL(baseUrl),
     openGraph: {
       title: "StarSpark Live",
-      description: "Build combos. Catch the beat. Light up the live!",
+      description: "Customise your creator. Build your profile. Light up the live!",
       images: [{ url: `${baseUrl}/og.png`, width: 1672, height: 941 }],
     },
     twitter: {
       card: "summary_large_image",
       title: "StarSpark Live",
-      description: "Build combos. Catch the beat. Light up the live!",
+      description: "Customise your creator. Build your profile. Light up the live!",
       images: [`${baseUrl}/og.png`],
     },
   };

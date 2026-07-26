@@ -2,12 +2,15 @@
 
 StarSpark Live is a bright, kid-safe rhythm and creator simulation game for web and Android. Players mix seven performance moves, catch the beat, build combos, and earn fictional likes, views, comments, and gifts during a short live show.
 
+The app opens with a splash and character customisation flow. Players then control when to go live from a persistent creator profile that tracks fans, likes, views, unlocked outfits, and saved performance snapshots.
+
 This is an original fictional game. It is not affiliated with TikTok or any other social platform.
 
 ## Play
 
 - Click **Start show** or press `Enter`.
 - Pick an outfit before going live; milestone rewards unlock more looks.
+- View your creator profile and saved post feed before and after every live.
 - Use the seven on-screen move buttons or keyboard keys `1`–`7`.
 - Switch moves to grow the combo; repeating a move cools it down.
 - Use **Silly** and **Robot** moves to boost views.

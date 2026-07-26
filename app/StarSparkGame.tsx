@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ZoeCharacter, { type OutfitId } from "./ZoeCharacter";
 
 type GameStatus = "ready" | "playing" | "paused" | "finished";
+type AppScreen = "splash" | "customize" | "profile" | "live";
 type MoveId = "dance" | "pose" | "spin" | "wave" | "trend" | "silly" | "robot";
 
 type Metrics = {
@@ -56,6 +57,18 @@ type Milestone = {
   value: number;
   stars: number;
   reward: string;
+};
+
+type SavedPost = {
+  id: string;
+  outfit: OutfitId;
+  views: number;
+  likes: number;
+  score: number;
+  level: number;
+  title: string;
+  cleared: boolean;
+  createdAt: number;
 };
 
 const LEVELS: LevelConfig[] = [
@@ -158,6 +171,8 @@ function loadProfile() {
     careerLikes: 0,
     milestones: [] as string[],
     outfit: "star" as OutfitId,
+    creatorName: "Zoe",
+    posts: [] as SavedPost[],
   };
   if (typeof window === "undefined") return fallback;
   try {
@@ -175,6 +190,25 @@ function loadProfile() {
       outfit: OUTFITS.some((outfit) => outfit.id === saved.outfit)
         ? (saved.outfit as OutfitId)
         : fallback.outfit,
+      creatorName:
+        typeof saved.creatorName === "string" && saved.creatorName.trim()
+          ? saved.creatorName.trim().slice(0, 18)
+          : fallback.creatorName,
+      posts: Array.isArray(saved.posts)
+        ? saved.posts
+            .filter((post: unknown): post is SavedPost => {
+              if (!post || typeof post !== "object") return false;
+              const item = post as Partial<SavedPost>;
+              return (
+                typeof item.id === "string" &&
+                OUTFITS.some((outfit) => outfit.id === item.outfit) &&
+                Number.isFinite(item.views) &&
+                Number.isFinite(item.likes) &&
+                Number.isFinite(item.score)
+              );
+            })
+            .slice(0, 12)
+        : [],
     };
   } catch {
     return fallback;
@@ -190,6 +224,8 @@ function saveProfile(
   careerLikes: number,
   milestones: string[],
   outfit: OutfitId,
+  creatorName: string,
+  posts: SavedPost[],
 ) {
   window.localStorage.setItem(
     PROFILE_KEY,
@@ -202,12 +238,15 @@ function saveProfile(
       careerLikes,
       milestones,
       outfit,
+      creatorName,
+      posts,
     }),
   );
   window.localStorage.setItem("starspark-best", String(bestScore));
 }
 
 export default function StarSparkGame() {
+  const [appScreen, setAppScreen] = useState<AppScreen>("splash");
   const [status, setStatus] = useState<GameStatus>("ready");
   const [playerLevel, setPlayerLevel] = useState(1);
   const [stars, setStars] = useState(250);
@@ -232,6 +271,9 @@ export default function StarSparkGame() {
   const [careerLikes, setCareerLikes] = useState(0);
   const [unlockedMilestones, setUnlockedMilestones] = useState<string[]>([]);
   const [profileReady, setProfileReady] = useState(false);
+  const [creatorName, setCreatorName] = useState("Zoe");
+  const [draftCreatorName, setDraftCreatorName] = useState("Zoe");
+  const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
   const [questProgress, setQuestProgress] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [newBest, setNewBest] = useState(false);
@@ -255,6 +297,9 @@ export default function StarSparkGame() {
   const nextMilestone = MILESTONES.find(
     (milestone) => !unlockedMilestones.includes(milestone.id),
   );
+  const creatorHandle = `@${creatorName.toLowerCase().replace(/[^a-z0-9]+/g, "") || "zoe"}spark`;
+  const creatorRank =
+    fans >= 10_000 ? "Creator Icon" : fans >= 1_000 ? "Rising Star" : fans >= 100 ? "New Favourite" : "Fresh Creator";
 
   const playTone = useCallback(
     (perfect = false) => {
@@ -299,6 +344,7 @@ export default function StarSparkGame() {
   }, []);
 
   const startGame = useCallback(() => {
+    setAppScreen("live");
     setStatus("playing");
     setTimeLeft(currentLevel.roundSeconds);
     setMetrics(EMPTY_METRICS);
@@ -334,6 +380,25 @@ export default function StarSparkGame() {
     lastActionRef.current = 0;
     playTone(true);
   }, [currentLevel, playTone]);
+
+  const finishCustomization = useCallback(() => {
+    const safeName = draftCreatorName.trim().slice(0, 18) || "Zoe";
+    setCreatorName(safeName);
+    setDraftCreatorName(safeName);
+    setStatus("ready");
+    setAppScreen("profile");
+  }, [draftCreatorName]);
+
+  const openCustomization = useCallback(() => {
+    setDraftCreatorName(creatorName);
+    setAppScreen("customize");
+  }, [creatorName]);
+
+  const viewProfile = useCallback(() => {
+    setStatus("ready");
+    setRunReward(null);
+    setAppScreen("profile");
+  }, []);
 
   const performMove = useCallback(
     (moveId: MoveId) => {
@@ -480,11 +545,22 @@ export default function StarSparkGame() {
       setCareerLikes(profile.careerLikes);
       setUnlockedMilestones(profile.milestones);
       setSelectedOutfit(profile.outfit);
+      setCreatorName(profile.creatorName);
+      setDraftCreatorName(profile.creatorName);
+      setSavedPosts(profile.posts);
       setTimeLeft(LEVELS[profile.level - 1].roundSeconds);
       setProfileReady(true);
     }, 0);
     return () => window.clearTimeout(loadTimer);
   }, []);
+
+  useEffect(() => {
+    if (!profileReady || appScreen !== "splash") return;
+    const splashTimer = window.setTimeout(() => {
+      setAppScreen("customize");
+    }, 1400);
+    return () => window.clearTimeout(splashTimer);
+  }, [appScreen, profileReady]);
 
   useEffect(() => {
     if (!profileReady) return;
@@ -497,6 +573,8 @@ export default function StarSparkGame() {
       careerLikes,
       unlockedMilestones,
       selectedOutfit,
+      creatorName,
+      savedPosts,
     );
   }, [
     bestScore,
@@ -505,6 +583,8 @@ export default function StarSparkGame() {
     fans,
     playerLevel,
     profileReady,
+    creatorName,
+    savedPosts,
     selectedOutfit,
     stars,
     unlockedMilestones,
@@ -609,6 +689,20 @@ export default function StarSparkGame() {
       setStars(nextStars);
       setFans(nextFans);
       setPlayerLevel(nextLevel);
+      setSavedPosts((current) => [
+        {
+          id: `${Date.now()}-${currentLevel.level}`,
+          outfit: selectedOutfit,
+          views: metrics.views,
+          likes: metrics.likes,
+          score: metrics.score,
+          level: currentLevel.level,
+          title: currentLevel.title,
+          cleared,
+          createdAt: Date.now(),
+        },
+        ...current,
+      ].slice(0, 12));
       burstReactions(cleared ? 10 : 5);
     }, 0);
     return () => window.clearTimeout(finishTimer);
@@ -619,9 +713,12 @@ export default function StarSparkGame() {
     currentLevel,
     fans,
     metrics.score,
+    metrics.likes,
+    metrics.views,
     mixGoalMet,
     moderatedCount,
     playerLevel,
+    selectedOutfit,
     stars,
     status,
     timeLeft,
@@ -630,6 +727,7 @@ export default function StarSparkGame() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return;
+      if (appScreen !== "live") return;
       if (event.key === " " && (status === "playing" || status === "paused")) {
         event.preventDefault();
         setStatus((current) => (current === "playing" ? "paused" : "playing"));
@@ -637,13 +735,193 @@ export default function StarSparkGame() {
       }
       const move = MOVES.find((item) => item.key === event.key);
       if (move) performMove(move.id);
-      if (event.key === "Enter" && (status === "ready" || status === "finished")) {
+      if (event.key === "Enter" && status === "ready") {
         startGame();
+      }
+      if (event.key === "Enter" && status === "finished") {
+        viewProfile();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [performMove, startGame, status]);
+  }, [appScreen, performMove, startGame, status, viewProfile]);
+
+  if (appScreen === "splash") {
+    return (
+      <main className="journey-shell splash-screen" aria-label="StarSpark Live loading">
+        <div className="ambient ambient-one" />
+        <div className="ambient ambient-two" />
+        <div className="splash-content">
+          <div className="splash-logo">★</div>
+          <p>SPARK · MOVE · SHINE</p>
+          <h1>StarSpark <span>Live</span></h1>
+          <div className="splash-loader"><i /></div>
+          <small>A kid-safe creator adventure</small>
+        </div>
+      </main>
+    );
+  }
+
+  if (appScreen === "customize") {
+    return (
+      <main className="journey-shell customization-screen">
+        <div className="ambient ambient-one" />
+        <div className="ambient ambient-two" />
+        <header className="journey-topbar">
+          <div className="journey-brand"><span>★</span><strong>StarSpark <i>Live</i></strong></div>
+          <div className="setup-step">CREATE YOUR STAR</div>
+        </header>
+        <section className="customization-layout">
+          <div className="customization-preview">
+            <div className="preview-spark preview-spark-one">✦</div>
+            <div className="preview-spark preview-spark-two">♡</div>
+            <div className="custom-character">
+              <ZoeCharacter outfit={selectedOutfit} />
+            </div>
+            <div className="custom-shadow" />
+            <div className="look-badge">
+              <span>{OUTFITS.find((outfit) => outfit.id === selectedOutfit)?.icon}</span>
+              <div>
+                <small>LIVE LOOK</small>
+                <strong>{OUTFITS.find((outfit) => outfit.id === selectedOutfit)?.name}</strong>
+              </div>
+            </div>
+          </div>
+          <div className="customization-panel">
+            <p className="eyebrow">WELCOME, CREATOR</p>
+            <h1>Make your star</h1>
+            <p>Choose a creator name and the outfit you want to wear when you go live.</p>
+            <label className="creator-name-field">
+              <span>Creator name</span>
+              <input
+                value={draftCreatorName}
+                onChange={(event) => setDraftCreatorName(event.target.value.slice(0, 18))}
+                placeholder="Zoe"
+                autoComplete="off"
+              />
+              <small>{draftCreatorName.length}/18</small>
+            </label>
+            <div className="custom-outfits">
+              <div className="custom-section-title">
+                <strong>Choose an outfit</strong>
+                <small>More looks unlock as you grow</small>
+              </div>
+              <div className="custom-outfit-grid">
+                {OUTFITS.map((outfit) => {
+                  const unlocked =
+                    !outfit.milestone || unlockedMilestones.includes(outfit.milestone);
+                  return (
+                    <button
+                      type="button"
+                      key={outfit.id}
+                      className={selectedOutfit === outfit.id ? "selected" : ""}
+                      disabled={!unlocked}
+                      onClick={() => setSelectedOutfit(outfit.id)}
+                    >
+                      <i style={{ background: `linear-gradient(145deg, ${outfit.colors[0]}, ${outfit.colors[1]})` }}>
+                        {unlocked ? outfit.icon : "🔒"}
+                      </i>
+                      <span>{outfit.name}</span>
+                      <small>{unlocked ? (selectedOutfit === outfit.id ? "Wearing" : "Unlocked") : "Milestone reward"}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <button type="button" className="primary-button custom-continue" onClick={finishCustomization}>
+              View my profile <span>↗</span>
+            </button>
+            <small className="local-note">Your creator profile is saved only on this device.</small>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (appScreen === "profile") {
+    return (
+      <main className="journey-shell creator-profile-screen">
+        <div className="ambient ambient-one" />
+        <div className="ambient ambient-two" />
+        <header className="journey-topbar profile-appbar">
+          <div className="journey-brand"><span>★</span><strong>StarSpark <i>Live</i></strong></div>
+          <div className="profile-wallet">
+            <span>★ {compact(stars)}</span>
+            <button type="button" onClick={openCustomization}>Edit look</button>
+          </div>
+        </header>
+        <section className="creator-profile">
+          <div className="profile-identity">
+            <div className="profile-portrait">
+              <ZoeCharacter outfit={selectedOutfit} />
+            </div>
+            <div className="profile-name">
+              <p>{creatorRank}</p>
+              <h1>{creatorName}</h1>
+              <span>{creatorHandle}</span>
+            </div>
+            <button type="button" className="edit-profile-button" onClick={openCustomization}>
+              Customise
+            </button>
+          </div>
+          <div className="profile-stats" aria-label="Creator profile totals">
+            <div><strong>{compact(fans)}</strong><span>Fans</span></div>
+            <div><strong>{compact(careerLikes)}</strong><span>Likes</span></div>
+            <div><strong>{compact(careerViews)}</strong><span>Views</span></div>
+            <div><strong>{savedPosts.length}</strong><span>Posts</span></div>
+          </div>
+          <div className="profile-actions">
+            <button type="button" className="go-live-button" onClick={startGame}>
+              <span>●</span>
+              Go live now
+            </button>
+            <div className="next-show-card">
+              <span>UP NEXT</span>
+              <strong>Level {currentLevel.level} · {currentLevel.title}</strong>
+              <small>{compact(currentLevel.target)} point target · Up to {compact(currentLevel.rewardFans * 3)} new fans</small>
+            </div>
+          </div>
+          <div className="feed-heading">
+            <div><span>▦</span><strong>My posts</strong></div>
+            <small>Performance snapshots saved after every live</small>
+          </div>
+          {savedPosts.length > 0 ? (
+            <div className="profile-feed">
+              {savedPosts.map((post) => (
+                <article className="feed-post" key={post.id}>
+                  <div className="feed-post-room">
+                    <span className="post-live">LIVE</span>
+                    <div className="post-character"><ZoeCharacter outfit={post.outfit} /></div>
+                    <div className="post-score">{compact(post.score)}</div>
+                    <div className="post-gradient" />
+                  </div>
+                  <div className="post-meta">
+                    <p>{post.cleared ? `${post.title} complete! ✨` : `${post.title} practice run`}</p>
+                    <div>
+                      <span>♥ {compact(post.likes)}</span>
+                      <span>◉ {compact(post.views)}</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-feed">
+              <span>▦</span>
+              <h2>Your stage is ready</h2>
+              <p>Finish your first live and its performance snapshot will appear here.</p>
+              <button type="button" onClick={startGame}>Create first post</button>
+            </div>
+          )}
+        </section>
+        <nav className="profile-bottom-nav" aria-label="Creator navigation">
+          <button type="button" className="active"><span>♙</span>Profile</button>
+          <button type="button" className="nav-live" onClick={startGame}><span>●</span>Go Live</button>
+          <button type="button" onClick={openCustomization}><span>✦</span>Outfits</button>
+        </nav>
+      </main>
+    );
+  }
 
   return (
     <main className="app-shell">
@@ -660,9 +938,9 @@ export default function StarSparkGame() {
         </div>
 
         <div className="profile-strip">
-          <div className="avatar-chip" aria-hidden="true">Z</div>
+          <div className="avatar-chip" aria-hidden="true">{creatorName.slice(0, 1).toUpperCase()}</div>
           <div className="level-copy">
-            <strong>Superstar Zoe</strong>
+            <strong>{creatorName}</strong>
             <span>Level {currentLevel.level} · {currentLevel.title}</span>
           </div>
           <div className="level-meter" aria-label={`${levelProgress}% of the current target`}>
@@ -999,11 +1277,15 @@ export default function StarSparkGame() {
                 )}
               </div>
             )}
-            <button type="button" className="primary-button" onClick={startGame}>
-              {runReward.cleared && runReward.level < LEVELS.length ? "Next level" : "Play again"}
-              <span>↗</span>
-            </button>
-            <small>Press Enter to keep shining</small>
+            <div className="result-actions">
+              <button type="button" className="primary-button" onClick={viewProfile}>
+                View my profile <span>↗</span>
+              </button>
+              <button type="button" className="secondary-result-button" onClick={startGame}>
+                Go live again
+              </button>
+            </div>
+            <small>Your new performance post is saved to your profile.</small>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render() {
@@ -30,14 +31,22 @@ test("renders the StarSpark game shell and social metadata", async () => {
   const html = await response.text();
   assert.match(
     html,
-    /<title>StarSpark Live — Rhythm Combo Game · StarSpark Live<\/title>/i,
+    /<title>StarSpark Live — Creator Adventure · StarSpark Live<\/title>/i,
   );
   assert.match(html, /StarSpark/);
-  assert.match(html, /Light up the live!/);
-  assert.match(html, /Start show/);
-  assert.match(html, /Pick Zoe(?:&apos;|&#x27;|')s live outfit/i);
-  assert.match(html, /CREATOR MILESTONES/i);
-  assert.match(html, /Kid-safe comment moderation/i);
+  assert.match(html, /Customise your creator\. Build your profile\. Light up the live!/);
+  assert.match(html, /A kid-safe creator adventure/i);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
+});
+
+test("includes the creator journey and kid-safe live systems", async () => {
+  const source = await readFile(
+    new URL("../app/StarSparkGame.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(source, /CREATE YOUR STAR/);
+  assert.match(source, /View my profile/);
+  assert.match(source, /Performance snapshots saved after every live/);
+  assert.match(source, /Kid-safe comment moderation/);
 });
