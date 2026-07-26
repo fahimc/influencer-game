@@ -35,6 +35,9 @@ test("renders the StarSpark game shell and social metadata", async () => {
   assert.match(html, /StarSpark/);
   assert.match(html, /Light up the live!/);
   assert.match(html, /Start show/);
+  assert.match(html, /Pick Zoe(?:&apos;|&#x27;|')s live outfit/i);
+  assert.match(html, /CREATOR MILESTONES/i);
+  assert.match(html, /Kid-safe comment moderation/i);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });

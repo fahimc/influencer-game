@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ZoeCharacter from "./ZoeCharacter";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ZoeCharacter, { type OutfitId } from "./ZoeCharacter";
 
 type GameStatus = "ready" | "playing" | "paused" | "finished";
-type MoveId = "dance" | "pose" | "spin" | "wave" | "trend";
+type MoveId = "dance" | "pose" | "spin" | "wave" | "trend" | "silly" | "robot";
 
 type Metrics = {
   score: number;
@@ -19,6 +19,13 @@ type Reaction = {
   symbol: string;
   left: number;
   delay: number;
+};
+
+type LiveComment = {
+  id: number;
+  name: string;
+  message: string;
+  tone: "positive" | "negative";
 };
 
 type LevelConfig = {
@@ -40,6 +47,15 @@ type RunReward = {
   level: number;
   title: string;
   target: number;
+  moderationBonus: number;
+};
+
+type Milestone = {
+  id: string;
+  metric: "views" | "likes";
+  value: number;
+  stars: number;
+  reward: string;
 };
 
 const LEVELS: LevelConfig[] = [
@@ -76,15 +92,47 @@ const MOVES: Array<{
   { id: "spin", label: "Spin", icon: "↻", key: "3", hint: "Twirl for bonus" },
   { id: "wave", label: "Wave", icon: "👋", key: "4", hint: "Greet the crowd" },
   { id: "trend", label: "Trend", icon: "🔥", key: "5", hint: "Big risk, big sparkle" },
+  { id: "silly", label: "Silly", icon: "🤪", key: "6", hint: "A goofy view booster" },
+  { id: "robot", label: "Robot", icon: "🤖", key: "7", hint: "Funny robot wobble" },
 ];
 
-const CHEERS = [
+const POSITIVE_COMMENTS = [
   ["MiaStar", "That move was amazing! ✨"],
   ["BeatBuddy", "Perfect timing! 🎵"],
   ["SunnySam", "Sparkle power! ⭐"],
   ["DanceDino", "Combo time! 🦕"],
   ["PixelPal", "You got this! 💜"],
   ["RainbowRay", "Best live ever! 🌈"],
+] as const;
+
+const NEGATIVE_COMMENTS = [
+  ["GrumpyGrape", "That move was a little boring."],
+  ["SleepySloth", "This live is kind of meh."],
+  ["ScrollScout", "Do something funny or I’m scrolling."],
+  ["FussyFox", "Not your best move."],
+] as const;
+
+const OUTFITS: Array<{
+  id: OutfitId;
+  name: string;
+  icon: string;
+  colors: [string, string];
+  milestone?: string;
+}> = [
+  { id: "star", name: "Star Pop", icon: "⭐", colors: ["#f8f1ff", "#ad38b5"] },
+  { id: "bubble", name: "Bubble Beat", icon: "🫧", colors: ["#ffb6e4", "#27cbd5"] },
+  { id: "sunset", name: "Sunset Jam", icon: "🌅", colors: ["#ffd86a", "#ed477e"], milestone: "views-100" },
+  { id: "neon", name: "Neon Night", icon: "⚡", colors: ["#67ffe5", "#5847dc"], milestone: "likes-100" },
+  { id: "galaxy", name: "Galaxy Glow", icon: "🌌", colors: ["#e247c7", "#221b5f"], milestone: "views-1000" },
+];
+
+const MILESTONES: Milestone[] = [
+  { id: "views-10", metric: "views", value: 10, stars: 25, reward: "Rookie badge" },
+  { id: "likes-10", metric: "likes", value: 10, stars: 25, reward: "Heart sticker" },
+  { id: "views-100", metric: "views", value: 100, stars: 75, reward: "Sunset Jam outfit" },
+  { id: "likes-100", metric: "likes", value: 100, stars: 75, reward: "Neon Night outfit" },
+  { id: "views-1000", metric: "views", value: 1_000, stars: 200, reward: "Galaxy Glow outfit" },
+  { id: "likes-1000", metric: "likes", value: 1_000, stars: 250, reward: "Creator crown" },
 ];
 
 const REACTIONS = ["💖", "⭐", "✨", "🎁", "💬", "🔥"];
@@ -101,7 +149,16 @@ function loadBestScore() {
 }
 
 function loadProfile() {
-  const fallback = { level: 1, stars: 250, fans: 0, bestScore: loadBestScore() };
+  const fallback = {
+    level: 1,
+    stars: 250,
+    fans: 0,
+    bestScore: loadBestScore(),
+    careerViews: 0,
+    careerLikes: 0,
+    milestones: [] as string[],
+    outfit: "star" as OutfitId,
+  };
   if (typeof window === "undefined") return fallback;
   try {
     const saved = JSON.parse(window.localStorage.getItem(PROFILE_KEY) ?? "");
@@ -110,16 +167,42 @@ function loadProfile() {
       stars: Math.max(0, Number(saved.stars) || fallback.stars),
       fans: Math.max(0, Number(saved.fans) || 0),
       bestScore: Math.max(0, Number(saved.bestScore) || fallback.bestScore),
+      careerViews: Math.max(0, Number(saved.careerViews) || 0),
+      careerLikes: Math.max(0, Number(saved.careerLikes) || 0),
+      milestones: Array.isArray(saved.milestones)
+        ? saved.milestones.filter((id: unknown): id is string => typeof id === "string")
+        : [],
+      outfit: OUTFITS.some((outfit) => outfit.id === saved.outfit)
+        ? (saved.outfit as OutfitId)
+        : fallback.outfit,
     };
   } catch {
     return fallback;
   }
 }
 
-function saveProfile(level: number, stars: number, fans: number, bestScore: number) {
+function saveProfile(
+  level: number,
+  stars: number,
+  fans: number,
+  bestScore: number,
+  careerViews: number,
+  careerLikes: number,
+  milestones: string[],
+  outfit: OutfitId,
+) {
   window.localStorage.setItem(
     PROFILE_KEY,
-    JSON.stringify({ level, stars, fans, bestScore }),
+    JSON.stringify({
+      level,
+      stars,
+      fans,
+      bestScore,
+      careerViews,
+      careerLikes,
+      milestones,
+      outfit,
+    }),
   );
   window.localStorage.setItem("starspark-best", String(bestScore));
 }
@@ -141,7 +224,14 @@ export default function StarSparkGame() {
   const [beat, setBeat] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [chatOffset, setChatOffset] = useState(0);
+  const [liveComments, setLiveComments] = useState<LiveComment[]>([]);
+  const [popularity, setPopularity] = useState(55);
+  const [moderatedCount, setModeratedCount] = useState(0);
+  const [selectedOutfit, setSelectedOutfit] = useState<OutfitId>("star");
+  const [careerViews, setCareerViews] = useState(0);
+  const [careerLikes, setCareerLikes] = useState(0);
+  const [unlockedMilestones, setUnlockedMilestones] = useState<string[]>([]);
+  const [profileReady, setProfileReady] = useState(false);
   const [questProgress, setQuestProgress] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [newBest, setNewBest] = useState(false);
@@ -152,6 +242,8 @@ export default function StarSparkGame() {
   const reactionIdRef = useRef(0);
   const audioRef = useRef<AudioContext | null>(null);
   const usedMovesRef = useRef(new Set<MoveId>());
+  const commentIdRef = useRef(0);
+  const commentTurnRef = useRef(0);
 
   const currentLevel = LEVELS[playerLevel - 1] ?? LEVELS[0];
   const levelProgress = Math.min(100, Math.round((metrics.score / currentLevel.target) * 100));
@@ -159,13 +251,9 @@ export default function StarSparkGame() {
   const trendingMove = MOVES[Math.floor((currentLevel.roundSeconds - timeLeft) / 7) % MOVES.length].id;
   const comboGoalMet = bestCombo >= currentLevel.comboTarget;
   const mixGoalMet = questProgress >= currentLevel.moveTarget;
-  const visibleComments = useMemo(
-    () =>
-      Array.from({ length: 3 }, (_, index) => {
-        const position = (chatOffset + index) % CHEERS.length;
-        return CHEERS[position];
-      }),
-    [chatOffset],
+  const badCommentCount = liveComments.filter((comment) => comment.tone === "negative").length;
+  const nextMilestone = MILESTONES.find(
+    (milestone) => !unlockedMilestones.includes(milestone.id),
   );
 
   const playTone = useCallback(
@@ -223,7 +311,24 @@ export default function StarSparkGame() {
     setQuestProgress(0);
     setNewBest(false);
     setRunReward(null);
+    setPopularity(55);
+    setModeratedCount(0);
+    setLiveComments([
+      {
+        id: commentIdRef.current++,
+        name: "MiaStar",
+        message: "Ready for the show! ✨",
+        tone: "positive",
+      },
+      {
+        id: commentIdRef.current++,
+        name: "SafetySpark",
+        message: "Tap the shield to clear unkind comments.",
+        tone: "positive",
+      },
+    ]);
     usedMovesRef.current.clear();
+    commentTurnRef.current = 0;
     checkpointRef.current = 0;
     beatAtRef.current = Date.now();
     lastActionRef.current = 0;
@@ -242,9 +347,25 @@ export default function StarSparkGame() {
       const switched = lastMove !== moveId;
       const nextCombo = switched ? Math.min(combo + 1, 20) : Math.max(1, combo - 1);
       const isTrending = moveId === trendingMove;
+      const isFunny = moveId === "silly" || moveId === "robot";
       const multiplier = Math.max(1, nextCombo);
       const scoreGain =
-        34 * multiplier + (perfect ? 90 : 0) + (isTrending ? 125 : 0);
+        34 * multiplier +
+        (perfect ? 90 : 0) +
+        (isTrending ? 125 : 0) +
+        (isFunny ? 75 : 0);
+      const discoveryRate =
+        careerViews < 10 ? 0.45 : careerViews < 100 ? 0.8 : careerViews < 1_000 ? 1.15 : 1.5;
+      const funnyBoost = isFunny ? 2.75 : 1;
+      const popularityFactor = 0.55 + popularity / 100;
+      const viewGain = Math.max(
+        1,
+        Math.round((scoreGain / 105) * discoveryRate * funnyBoost * popularityFactor),
+      );
+      const likeGain = Math.max(
+        isFunny || perfect ? 1 : 0,
+        Math.round(viewGain * (0.2 + popularity / 250)),
+      );
       const nextScore = metrics.score + scoreGain;
       const nextCheckpoint = Math.min(
         3,
@@ -264,11 +385,31 @@ export default function StarSparkGame() {
       setAnimationKey((current) => current + 1);
       setMetrics((current) => ({
         score: current.score + scoreGain,
-        likes: current.likes + Math.round(scoreGain * 1.8),
-        views: current.views + Math.round(scoreGain * 5.2),
+        likes: current.likes + likeGain,
+        views: current.views + viewGain,
         comments: current.comments + (perfect || isTrending ? 3 : 1),
         gifts: current.gifts + giftGain,
       }));
+      setCareerViews((current) => current + viewGain);
+      setCareerLikes((current) => current + likeGain);
+      setPopularity((current) =>
+        Math.min(100, current + (isFunny ? 3 : perfect || isTrending ? 2 : switched ? 1 : 0)),
+      );
+
+      const commentTurn = ++commentTurnRef.current;
+      if (commentTurn % 2 === 0) {
+        const isNegative =
+          commentTurn % 6 === 0 || (playerLevel >= 3 && commentTurn % 5 === 0);
+        const pool = isNegative ? NEGATIVE_COMMENTS : POSITIVE_COMMENTS;
+        const [name, message] = pool[commentTurn % pool.length];
+        const newComment: LiveComment = {
+          id: commentIdRef.current++,
+          name,
+          message,
+          tone: isNegative ? "negative" : "positive",
+        };
+        setLiveComments((current) => [...current.slice(-3), newComment]);
+      }
 
       usedMovesRef.current.add(moveId);
       setQuestProgress(usedMovesRef.current.size);
@@ -277,6 +418,8 @@ export default function StarSparkGame() {
           ? `CHECKPOINT ${nextCheckpoint}/3 · GIFT!`
           : hitCheckpoint
             ? "TARGET REACHED! ★"
+            : isFunny
+              ? `SILLY BOOST +${viewGain} VIEWS`
             : isTrending
           ? `TREND BOOST +${scoreGain}`
           : perfect
@@ -285,11 +428,45 @@ export default function StarSparkGame() {
               ? `NICE MIX! +${scoreGain}`
               : `Fresh move needed! +${scoreGain}`,
       );
-      setChatOffset((current) => (current + 1) % CHEERS.length);
-      burstReactions(perfect || isTrending ? 4 : 2);
-      playTone(perfect || isTrending);
+      burstReactions(perfect || isTrending || isFunny ? 4 : 2);
+      playTone(perfect || isTrending || isFunny);
     },
-    [burstReactions, combo, currentLevel.target, lastMove, metrics.score, playTone, status, trendingMove],
+    [
+      burstReactions,
+      careerViews,
+      combo,
+      currentLevel.target,
+      lastMove,
+      metrics.score,
+      playTone,
+      playerLevel,
+      popularity,
+      status,
+      trendingMove,
+    ],
+  );
+
+  const removeComment = useCallback(
+    (commentId: number) => {
+      if (status !== "playing") return;
+      const comment = liveComments.find((item) => item.id === commentId);
+      if (!comment || comment.tone !== "negative") return;
+      setLiveComments((current) => current.filter((item) => item.id !== commentId));
+      setModeratedCount((current) => current + 1);
+      setPopularity((current) => Math.min(100, current + 8));
+      setMetrics((current) => ({
+        ...current,
+        score: current.score + 125,
+        likes: current.likes + 2,
+        views: current.views + 5,
+      }));
+      setCareerLikes((current) => current + 2);
+      setCareerViews((current) => current + 5);
+      setFeedback("KINDNESS BONUS +125");
+      burstReactions(5);
+      playTone(true);
+    },
+    [burstReactions, liveComments, playTone, status],
   );
 
   useEffect(() => {
@@ -299,10 +476,83 @@ export default function StarSparkGame() {
       setStars(profile.stars);
       setFans(profile.fans);
       setBestScore(profile.bestScore);
+      setCareerViews(profile.careerViews);
+      setCareerLikes(profile.careerLikes);
+      setUnlockedMilestones(profile.milestones);
+      setSelectedOutfit(profile.outfit);
       setTimeLeft(LEVELS[profile.level - 1].roundSeconds);
+      setProfileReady(true);
     }, 0);
     return () => window.clearTimeout(loadTimer);
   }, []);
+
+  useEffect(() => {
+    if (!profileReady) return;
+    saveProfile(
+      playerLevel,
+      stars,
+      fans,
+      bestScore,
+      careerViews,
+      careerLikes,
+      unlockedMilestones,
+      selectedOutfit,
+    );
+  }, [
+    bestScore,
+    careerLikes,
+    careerViews,
+    fans,
+    playerLevel,
+    profileReady,
+    selectedOutfit,
+    stars,
+    unlockedMilestones,
+  ]);
+
+  useEffect(() => {
+    if (!profileReady) return;
+    const newlyReached = MILESTONES.filter((milestone) => {
+      const total = milestone.metric === "views" ? careerViews : careerLikes;
+      return total >= milestone.value && !unlockedMilestones.includes(milestone.id);
+    });
+    if (newlyReached.length === 0) return;
+    const milestoneTimer = window.setTimeout(() => {
+      const rewardStars = newlyReached.reduce((total, milestone) => total + milestone.stars, 0);
+      setUnlockedMilestones((current) => [
+        ...current,
+        ...newlyReached.map((milestone) => milestone.id),
+      ]);
+      setStars((current) => current + rewardStars);
+      const latest = newlyReached[newlyReached.length - 1];
+      setFeedback(
+        `${compact(latest.value)} ${latest.metric.toUpperCase()}! +${rewardStars} ★`,
+      );
+      burstReactions(8);
+    }, 0);
+    return () => window.clearTimeout(milestoneTimer);
+  }, [
+    burstReactions,
+    careerLikes,
+    careerViews,
+    profileReady,
+    unlockedMilestones,
+  ]);
+
+  useEffect(() => {
+    if (status !== "playing" || badCommentCount === 0) return;
+    const penaltyTimer = window.setInterval(() => {
+      const viewerLoss = badCommentCount * Math.max(1, Math.ceil(playerLevel / 2));
+      setPopularity((current) => Math.max(0, current - badCommentCount * 4));
+      setMetrics((current) => ({
+        ...current,
+        likes: Math.max(0, current.likes - badCommentCount),
+        views: Math.max(0, current.views - viewerLoss),
+      }));
+      setFeedback(`BAD VIBES · ${viewerLoss} VIEWER${viewerLoss === 1 ? "" : "S"} LEFT`);
+    }, 2500);
+    return () => window.clearInterval(penaltyTimer);
+  }, [badCommentCount, playerLevel, status]);
 
   useEffect(() => {
     if (status !== "playing") return;
@@ -329,7 +579,9 @@ export default function StarSparkGame() {
       const rating = cleared
         ? 1 + Number(comboGoalMet) + Number(mixGoalMet)
         : 0;
-      const earnedStars = cleared ? currentLevel.rewardStars * rating : 0;
+      const moderationBonus = moderatedCount * 5;
+      const earnedStars =
+        (cleared ? currentLevel.rewardStars * rating : 0) + moderationBonus;
       const earnedFans = cleared ? currentLevel.rewardFans * rating : 0;
       const nextLevel = cleared
         ? Math.min(LEVELS.length, playerLevel + 1)
@@ -348,6 +600,7 @@ export default function StarSparkGame() {
         level: currentLevel.level,
         title: currentLevel.title,
         target: currentLevel.target,
+        moderationBonus,
       });
       if (metrics.score > bestScore) {
         setNewBest(true);
@@ -356,7 +609,6 @@ export default function StarSparkGame() {
       setStars(nextStars);
       setFans(nextFans);
       setPlayerLevel(nextLevel);
-      saveProfile(nextLevel, nextStars, nextFans, nextBest);
       burstReactions(cleared ? 10 : 5);
     }, 0);
     return () => window.clearTimeout(finishTimer);
@@ -368,6 +620,7 @@ export default function StarSparkGame() {
     fans,
     metrics.score,
     mixGoalMet,
+    moderatedCount,
     playerLevel,
     stars,
     status,
@@ -470,7 +723,7 @@ export default function StarSparkGame() {
             <div className="metrics-stack" aria-label="Live performance stats">
               <div><span>♥</span><strong>{compact(metrics.likes)}</strong><small>Likes</small></div>
               <div><span>◉</span><strong>{compact(metrics.views)}</strong><small>Views</small></div>
-              <div><span>●</span><strong>{compact(metrics.comments)}</strong><small>Cheers</small></div>
+              <div><span>●</span><strong>{compact(metrics.comments)}</strong><small>Comments</small></div>
               <div><span>🎁</span><strong>{compact(metrics.gifts)}</strong><small>Gifts</small></div>
             </div>
 
@@ -490,6 +743,11 @@ export default function StarSparkGame() {
                 <em style={{ left: "33.33%" }} />
                 <em style={{ left: "66.66%" }} />
               </div>
+              <div className="popularity-row">
+                <span>POPULARITY</span>
+                <b>{popularity}%</b>
+                <div><i style={{ width: `${popularity}%` }} /></div>
+              </div>
             </div>
 
             <div className={`beat-orb ${beat ? "beat-now" : ""}`} aria-hidden="true">
@@ -498,7 +756,7 @@ export default function StarSparkGame() {
 
             <div className="avatar-zone">
               <div key={animationKey} className={`performer move-${activeMove ?? "idle"}`} aria-label="Zoe performing">
-                <ZoeCharacter />
+                <ZoeCharacter outfit={selectedOutfit} />
               </div>
               <div className="stage-shadow" />
             </div>
@@ -518,11 +776,24 @@ export default function StarSparkGame() {
               ))}
             </div>
 
-            <div className="chat-stack" aria-label="Positive audience cheers">
-              {visibleComments.map(([name, message], index) => (
-                <div className="chat-bubble" key={`${name}-${chatOffset}-${index}`}>
-                  <span>{name.slice(0, 1)}</span>
-                  <p><b>{name}</b>{message}</p>
+            <div className="chat-stack" aria-label="Kid-safe comment moderation">
+              <div className="chat-monitor-label">
+                <span>🛡</span> MODERATE · +125 SCORE
+              </div>
+              {liveComments.map((comment) => (
+                <div className={`chat-bubble ${comment.tone}`} key={comment.id}>
+                  <span>{comment.name.slice(0, 1)}</span>
+                  <p><b>{comment.name}</b>{comment.message}</p>
+                  {comment.tone === "negative" && status === "playing" && (
+                    <button
+                      type="button"
+                      onClick={() => removeComment(comment.id)}
+                      aria-label={`Remove unkind comment from ${comment.name}`}
+                      title="Remove unkind comment"
+                    >
+                      🛡
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -536,15 +807,51 @@ export default function StarSparkGame() {
                   Build a ×{currentLevel.comboTarget} combo and mix {currentLevel.moveTarget} moves
                   for all three stars.
                 </p>
+                <div className="outfit-picker">
+                  <div>
+                    <strong>Pick Zoe&apos;s live outfit</strong>
+                    <small>Milestones unlock new looks</small>
+                  </div>
+                  <div className="outfit-list">
+                    {OUTFITS.map((outfit) => {
+                      const unlocked =
+                        !outfit.milestone || unlockedMilestones.includes(outfit.milestone);
+                      return (
+                        <button
+                          type="button"
+                          key={outfit.id}
+                          className={selectedOutfit === outfit.id ? "selected" : ""}
+                          disabled={!unlocked}
+                          onClick={() => setSelectedOutfit(outfit.id)}
+                          aria-label={`${outfit.name}${unlocked ? "" : ", locked"}`}
+                        >
+                          <i
+                            style={{
+                              background: `linear-gradient(145deg, ${outfit.colors[0]}, ${outfit.colors[1]})`,
+                            }}
+                          >
+                            {unlocked ? outfit.icon : "🔒"}
+                          </i>
+                          <span>{outfit.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="reward-preview">
                   <span>★ {compact(currentLevel.rewardStars)}–{compact(currentLevel.rewardStars * 3)}</span>
                   <span>♥ {compact(currentLevel.rewardFans)}–{compact(currentLevel.rewardFans * 3)}</span>
                   <span>{currentLevel.roundSeconds}s show</span>
                 </div>
+                {nextMilestone && (
+                  <div className="next-milestone">
+                    NEXT: {compact(nextMilestone.value)} {nextMilestone.metric.toUpperCase()} · {nextMilestone.reward}
+                  </div>
+                )}
                 <button type="button" className="primary-button" onClick={startGame}>
                   Start show <span>↗</span>
                 </button>
-                <small>Press Enter to start · 1–5 to move</small>
+                <small>Press Enter to start · 1–7 to move</small>
               </div>
             )}
 
@@ -610,11 +917,21 @@ export default function StarSparkGame() {
           </section>
 
           <section className="tip-card">
-            <p className="eyebrow">COMBO LAB</p>
-            <h2>Keep it fresh</h2>
-            <p>Switch moves on each beat. Repeating the same move cools your combo.</p>
-            <div className="mini-combo">
-              <span>♫</span><i>→</i><span>✦</span><i>→</i><span>👋</span>
+            <p className="eyebrow">CREATOR MILESTONES</p>
+            <h2>Grow from zero</h2>
+            <div className="milestone-list">
+              {MILESTONES.map((milestone) => {
+                const complete = unlockedMilestones.includes(milestone.id);
+                return (
+                  <div className={complete ? "complete" : ""} key={milestone.id}>
+                    <span>{complete ? "✓" : milestone.metric === "views" ? "◉" : "♥"}</span>
+                    <p>
+                      <b>{compact(milestone.value)} {milestone.metric}</b>
+                      <small>{milestone.reward} · +{milestone.stars} ★</small>
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
@@ -631,7 +948,7 @@ export default function StarSparkGame() {
             <span>🛡️</span>
             <div>
               <strong>Just play. Stay safe.</strong>
-              <p>No camera, microphone, chat, ads, or account needed. All cheers are game-made.</p>
+              <p>All comments are fictional and kid-safe. No camera, microphone, real chat, ads, or account needed.</p>
             </div>
           </section>
         </aside>
@@ -671,11 +988,15 @@ export default function StarSparkGame() {
               <div><span>♥</span><small>Likes</small><strong>{compact(metrics.likes)}</strong></div>
               <div><span>✦</span><small>Perfects</small><strong>{perfects}</strong></div>
               <div><span>🎁</span><small>Gifts</small><strong>{metrics.gifts}</strong></div>
+              <div><span>🛡</span><small>Moderated</small><strong>{moderatedCount}</strong></div>
             </div>
-            {runReward.cleared && (
+            {runReward.stars > 0 && (
               <div className="reward-payout">
                 <span><b>+{compact(runReward.stars)}</b> stars</span>
                 <span><b>+{compact(runReward.fans)}</b> fans</span>
+                {runReward.moderationBonus > 0 && (
+                  <span><b>+{runReward.moderationBonus}</b> kindness bonus</span>
+                )}
               </div>
             )}
             <button type="button" className="primary-button" onClick={startGame}>

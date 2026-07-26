@@ -1,15 +1,84 @@
-export default function ZoeCharacter() {
+export type OutfitId = "star" | "bubble" | "sunset" | "neon" | "galaxy";
+
+const OUTFIT_PALETTES: Record<
+  OutfitId,
+  {
+    hoodie: [string, string, string];
+    pants: [string, string, string];
+    pantsDark: [string, string];
+    shoe: [string, string, string];
+    accent: [string, string];
+    trim: [string, string];
+    pocket: string;
+    cuff: string;
+  }
+> = {
+  star: {
+    hoodie: ["#ffffff", "#f3edf8", "#cfc0dc"],
+    pants: ["#db47c4", "#9b30aa", "#552378"],
+    pantsDark: ["#a931ae", "#4d1e70"],
+    shoe: ["#ffffff", "#f2eaf7", "#d1c1dc"],
+    accent: ["#72f0e9", "#18a7c2"],
+    trim: ["#ff76ce", "#d92d91"],
+    pocket: "#842987",
+    cuff: "#e7ddea",
+  },
+  bubble: {
+    hoodie: ["#fff7ff", "#ffd9f0", "#e9b6e8"],
+    pants: ["#5ee5e3", "#20a8cb", "#3154a7"],
+    pantsDark: ["#28b9cd", "#29478d"],
+    shoe: ["#ffffff", "#e7fbff", "#b9dff0"],
+    accent: ["#ff8bd5", "#e33c9c"],
+    trim: ["#78f4eb", "#14a9bf"],
+    pocket: "#237fae",
+    cuff: "#f7cde9",
+  },
+  sunset: {
+    hoodie: ["#fffdf0", "#ffe19e", "#ffb270"],
+    pants: ["#ff7f73", "#ef477d", "#9e277f"],
+    pantsDark: ["#ee547f", "#81276d"],
+    shoe: ["#fffdf6", "#ffe8c8", "#e9bea7"],
+    accent: ["#fff076", "#ffad24"],
+    trim: ["#ff75c6", "#dc2d92"],
+    pocket: "#b73370",
+    cuff: "#ffe0b2",
+  },
+  neon: {
+    hoodie: ["#213060", "#283a80", "#111b49"],
+    pants: ["#8b68ff", "#5747d8", "#292f87"],
+    pantsDark: ["#654ddd", "#21276d"],
+    shoe: ["#f7ffff", "#d9f7ff", "#a9d7e7"],
+    accent: ["#75ffe8", "#00c9cf"],
+    trim: ["#ff77e2", "#ff2cab"],
+    pocket: "#3e3897",
+    cuff: "#314779",
+  },
+  galaxy: {
+    hoodie: ["#4f257b", "#282264", "#111339"],
+    pants: ["#e34bc8", "#7938b6", "#292154"],
+    pantsDark: ["#8a39ad", "#251a4d"],
+    shoe: ["#fffaff", "#e8e0f8", "#b7acd5"],
+    accent: ["#62f5ff", "#3389e8"],
+    trim: ["#ff8bdd", "#b831e4"],
+    pocket: "#57277e",
+    cuff: "#45356c",
+  },
+};
+
+export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId }) {
+  const palette = OUTFIT_PALETTES[outfit];
   return (
     <svg
       className="zoe-vector"
+      data-outfit={outfit}
       viewBox="0 0 420 720"
       role="img"
       aria-labelledby="zoe-title zoe-description"
     >
       <title id="zoe-title">Zoe, the StarSpark performer</title>
       <desc id="zoe-description">
-        A cheerful vector character with brown space buns, a white star hoodie,
-        magenta cargo pants, and teal and pink sneakers.
+        A cheerful vector character with brown space buns wearing the selected
+        colourful creator outfit.
       </desc>
       <defs>
         <linearGradient id="zoe-skin" x1="0" y1="0" x2="0.8" y2="1">
@@ -23,31 +92,31 @@ export default function ZoeCharacter() {
           <stop offset="1" stopColor="#210a08" />
         </linearGradient>
         <linearGradient id="zoe-hoodie" x1="0" y1="0" x2="0.9" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.62" stopColor="#f3edf8" />
-          <stop offset="1" stopColor="#cfc0dc" />
+          <stop offset="0" stopColor={palette.hoodie[0]} />
+          <stop offset="0.62" stopColor={palette.hoodie[1]} />
+          <stop offset="1" stopColor={palette.hoodie[2]} />
         </linearGradient>
         <linearGradient id="zoe-pants" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#db47c4" />
-          <stop offset="0.48" stopColor="#9b30aa" />
-          <stop offset="1" stopColor="#552378" />
+          <stop offset="0" stopColor={palette.pants[0]} />
+          <stop offset="0.48" stopColor={palette.pants[1]} />
+          <stop offset="1" stopColor={palette.pants[2]} />
         </linearGradient>
         <linearGradient id="zoe-pants-dark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#a931ae" />
-          <stop offset="1" stopColor="#4d1e70" />
+          <stop offset="0" stopColor={palette.pantsDark[0]} />
+          <stop offset="1" stopColor={palette.pantsDark[1]} />
         </linearGradient>
         <linearGradient id="zoe-shoe" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.7" stopColor="#f2eaf7" />
-          <stop offset="1" stopColor="#d1c1dc" />
+          <stop offset="0" stopColor={palette.shoe[0]} />
+          <stop offset="0.7" stopColor={palette.shoe[1]} />
+          <stop offset="1" stopColor={palette.shoe[2]} />
         </linearGradient>
         <linearGradient id="zoe-teal" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#72f0e9" />
-          <stop offset="1" stopColor="#18a7c2" />
+          <stop offset="0" stopColor={palette.accent[0]} />
+          <stop offset="1" stopColor={palette.accent[1]} />
         </linearGradient>
         <linearGradient id="zoe-pink" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ff76ce" />
-          <stop offset="1" stopColor="#d92d91" />
+          <stop offset="0" stopColor={palette.trim[0]} />
+          <stop offset="1" stopColor={palette.trim[1]} />
         </linearGradient>
         <linearGradient id="zoe-gold" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff77a" />
@@ -76,7 +145,7 @@ export default function ZoeCharacter() {
             <path d="M-31 29 Q-3 17 26 27 M-34 164 Q-3 177 29 163 M-31 224 Q-2 211 28 224" className="zoe-detail" opacity=".42" />
             <path
               d="M-43 79 Q-20 67 3 78 L1 137 Q-19 148 -40 137Z"
-              fill="#842987"
+              fill={palette.pocket}
               stroke="#4e214b"
               strokeWidth="3"
               strokeLinejoin="round"
@@ -113,7 +182,7 @@ export default function ZoeCharacter() {
             <path d="M-26 27 Q3 17 31 29 M-29 163 Q3 177 34 164 M-28 224 Q2 211 31 224" className="zoe-detail" opacity=".42" />
             <path
               d="M-3 78 Q20 67 43 79 L40 137 Q19 148 -1 137Z"
-              fill="#842987"
+              fill={palette.pocket}
               stroke="#4e214b"
               strokeWidth="3"
               strokeLinejoin="round"
@@ -160,7 +229,7 @@ export default function ZoeCharacter() {
               className="zoe-outline"
             />
             <path d="M-38 32 Q-7 17 23 31 M-37 88 Q-6 76 24 89" className="zoe-detail" opacity=".38" />
-            <path d="M-29 113 Q-7 103 16 114 L12 133 Q-8 142 -27 131Z" fill="#e7ddea" stroke="#a593b3" strokeWidth="3" />
+            <path d="M-29 113 Q-7 103 16 114 L12 133 Q-8 142 -27 131Z" fill={palette.cuff} stroke="#a593b3" strokeWidth="3" />
             <g transform="translate(-7 128)">
               <path
                 d="M-14 -3 C-17 11 -19 28 -18 43 C-18 55 -12 63 -6 60 C-1 58 0 50 -1 43 L0 54 C1 63 8 65 11 58 C13 53 10 43 10 36 L13 40 C17 46 24 43 24 37 C24 32 18 26 15 20 L12 10 C9 0 4 -5 -14 -3Z"
@@ -176,7 +245,7 @@ export default function ZoeCharacter() {
 
         <path
           d="M-68 -116 C-65 -153 -42 -170 0 -170 C42 -170 65 -153 68 -116 L48 -94 H-48Z"
-          fill="#c5b5d3"
+          fill={palette.cuff}
           stroke="#4e214b"
           strokeWidth="4"
         />
@@ -201,7 +270,7 @@ export default function ZoeCharacter() {
               className="zoe-outline"
             />
             <path d="M-23 31 Q7 17 38 32 M-24 89 Q6 76 37 88" className="zoe-detail" opacity=".38" />
-            <path d="M-16 114 Q7 103 29 113 L27 131 Q8 142 -12 133Z" fill="#e7ddea" stroke="#a593b3" strokeWidth="3" />
+            <path d="M-16 114 Q7 103 29 113 L27 131 Q8 142 -12 133Z" fill={palette.cuff} stroke="#a593b3" strokeWidth="3" />
             <g transform="translate(7 128)">
               <g transform="scale(-1 1)">
                 <path
