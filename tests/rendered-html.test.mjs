@@ -52,3 +52,44 @@ test("includes the creator journey and kid-safe live systems", async () => {
   assert.match(source, /bubble-pop-loop\.mp3/);
   assert.match(source, /sylhet-bangladesh\.mp3/);
 });
+
+test("includes the milestone wardrobe and live style boosts", async () => {
+  const gameSource = await readFile(
+    new URL("../app/StarSparkGame.tsx", import.meta.url),
+    "utf8",
+  );
+  const characterSource = await readFile(
+    new URL("../app/ZoeCharacter.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(gameSource, /Full wardrobe/);
+  assert.match(gameSource, /Rainbow Twirl/);
+  assert.match(gameSource, /Crown Braid/);
+  assert.match(gameSource, /Wardrobe boost applied/);
+  assert.match(gameSource, /wardrobeViewBoost/);
+  assert.match(gameSource, /wardrobeLikeBoost/);
+  assert.match(characterSource, /data-hair/);
+  assert.match(characterSource, /data-makeup/);
+  assert.match(characterSource, /zoe-skirt/);
+});
+
+test("includes kid-safe split-screen NPC creator battles", async () => {
+  const gameSource = await readFile(
+    new URL("../app/StarSparkGame.tsx", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(gameSource, /BATTLE_RIVALS/);
+  assert.match(gameSource, /Battle invitation accepted/);
+  assert.match(gameSource, /battlePlayerScore/);
+  assert.match(gameSource, /battleRivalScore/);
+  assert.match(gameSource, /Battle again/);
+  assert.match(styles, /\.battle-scoreboard/);
+  assert.match(styles, /\.battle-rival-zone/);
+  assert.match(styles, /\.battle-mode/);
+});

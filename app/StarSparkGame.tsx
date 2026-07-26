@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import ZoeCharacter, { type OutfitId } from "./ZoeCharacter";
+import ZoeCharacter, {
+  type HairStyleId,
+  type MakeupId,
+  type OutfitId,
+} from "./ZoeCharacter";
 
 type GameStatus = "ready" | "playing" | "paused" | "finished";
 type AppScreen = "splash" | "customize" | "profile" | "live";
 type MoveId = "dance" | "pose" | "spin" | "wave" | "trend" | "silly" | "robot";
+type GameMode = "solo" | "battle";
 
 type Metrics = {
   score: number;
@@ -42,6 +47,7 @@ type LevelConfig = {
 
 type RunReward = {
   cleared: boolean;
+  mode: GameMode;
   rating: number;
   stars: number;
   fans: number;
@@ -49,6 +55,9 @@ type RunReward = {
   title: string;
   target: number;
   moderationBonus: number;
+  rivalName?: string;
+  playerBattleScore?: number;
+  rivalBattleScore?: number;
 };
 
 type Milestone = {
@@ -62,13 +71,43 @@ type Milestone = {
 type SavedPost = {
   id: string;
   outfit: OutfitId;
+  hairStyle: HairStyleId;
+  makeup: MakeupId;
   views: number;
   likes: number;
   score: number;
   level: number;
   title: string;
   cleared: boolean;
+  mode: GameMode;
+  rivalName?: string;
   createdAt: number;
+};
+
+type WardrobeTab = "outfits" | "hair" | "makeup";
+type WardrobeItem<T extends string> = {
+  id: T;
+  name: string;
+  icon: string;
+  colors: [string, string];
+  viewBoost: number;
+  likeBoost: number;
+  milestone?: string;
+  tag?: string;
+};
+
+type BattleRival = {
+  id: string;
+  name: string;
+  handle: string;
+  title: string;
+  icon: string;
+  outfit: OutfitId;
+  hairStyle: HairStyleId;
+  makeup: MakeupId;
+  skill: number;
+  rewardBonus: number;
+  catchphrases: readonly string[];
 };
 
 const LEVELS: LevelConfig[] = [
@@ -125,27 +164,96 @@ const NEGATIVE_COMMENTS = [
   ["FussyFox", "Not your best move."],
 ] as const;
 
-const OUTFITS: Array<{
-  id: OutfitId;
-  name: string;
-  icon: string;
-  colors: [string, string];
-  milestone?: string;
-}> = [
-  { id: "star", name: "Star Pop", icon: "⭐", colors: ["#f8f1ff", "#ad38b5"] },
-  { id: "bubble", name: "Bubble Beat", icon: "🫧", colors: ["#ffb6e4", "#27cbd5"] },
-  { id: "sunset", name: "Sunset Jam", icon: "🌅", colors: ["#ffd86a", "#ed477e"], milestone: "views-100" },
-  { id: "neon", name: "Neon Night", icon: "⚡", colors: ["#67ffe5", "#5847dc"], milestone: "likes-100" },
-  { id: "galaxy", name: "Galaxy Glow", icon: "🌌", colors: ["#e247c7", "#221b5f"], milestone: "views-1000" },
+const OUTFITS: Array<WardrobeItem<OutfitId>> = [
+  { id: "star", name: "Star Pop", icon: "⭐", colors: ["#f8f1ff", "#ad38b5"], viewBoost: 0, likeBoost: 0, tag: "Street" },
+  { id: "bubble", name: "Bubble Beat", icon: "🫧", colors: ["#ffb6e4", "#27cbd5"], viewBoost: 3, likeBoost: 2, tag: "Street" },
+  { id: "rainbow-dress", name: "Rainbow Twirl", icon: "🌈", colors: ["#ff9fda", "#63e8df"], viewBoost: 5, likeBoost: 9, milestone: "views-10", tag: "Dress" },
+  { id: "sunset", name: "Sunset Jam", icon: "🌅", colors: ["#ffd86a", "#ed477e"], viewBoost: 6, likeBoost: 5, milestone: "views-100", tag: "Street" },
+  { id: "neon", name: "Neon Night", icon: "⚡", colors: ["#67ffe5", "#5847dc"], viewBoost: 8, likeBoost: 7, milestone: "likes-100", tag: "Street" },
+  { id: "moon-dress", name: "Moonlight Wish", icon: "🌙", colors: ["#bcecff", "#6552d6"], viewBoost: 10, likeBoost: 6, milestone: "likes-100", tag: "Dress" },
+  { id: "galaxy", name: "Galaxy Glow", icon: "🌌", colors: ["#e247c7", "#221b5f"], viewBoost: 12, likeBoost: 10, milestone: "views-1000", tag: "Street" },
+  { id: "royal-dress", name: "Royal Spark", icon: "👑", colors: ["#ffe771", "#9c3ca8"], viewBoost: 15, likeBoost: 15, milestone: "likes-1000", tag: "Dress" },
+];
+
+const HAIR_STYLES: Array<WardrobeItem<HairStyleId>> = [
+  { id: "space-buns", name: "Space Buns", icon: "🎀", colors: ["#8a3e1b", "#2c0d09"], viewBoost: 0, likeBoost: 0 },
+  { id: "ponytail", name: "Pop Pony", icon: "✨", colors: ["#9b4b21", "#32100c"], viewBoost: 2, likeBoost: 2 },
+  { id: "braids", name: "Beat Braids", icon: "💖", colors: ["#7e361c", "#25100b"], viewBoost: 4, likeBoost: 3, milestone: "views-10" },
+  { id: "curls", name: "Cloud Curls", icon: "☁️", colors: ["#a65329", "#3a130c"], viewBoost: 3, likeBoost: 5, milestone: "likes-10" },
+  { id: "bob", name: "Creator Bob", icon: "✂️", colors: ["#6f2c18", "#240b08"], viewBoost: 6, likeBoost: 4, milestone: "views-100" },
+  { id: "crown-braid", name: "Crown Braid", icon: "👑", colors: ["#9a4a22", "#32100b"], viewBoost: 10, likeBoost: 10, milestone: "likes-1000" },
+];
+
+const MAKEUP_LOOKS: Array<WardrobeItem<MakeupId>> = [
+  { id: "natural", name: "Fresh Face", icon: "😊", colors: ["#ffd7b4", "#e99a76"], viewBoost: 0, likeBoost: 0 },
+  { id: "blush-pop", name: "Blush Pop", icon: "🌸", colors: ["#ffb3c6", "#ee668b"], viewBoost: 1, likeBoost: 3 },
+  { id: "sparkle", name: "Star Sparkle", icon: "✨", colors: ["#fff16d", "#ff6dc4"], viewBoost: 3, likeBoost: 5, milestone: "likes-10" },
+  { id: "neon", name: "Neon Liner", icon: "⚡", colors: ["#54f4eb", "#ff5fc0"], viewBoost: 6, likeBoost: 7, milestone: "likes-100" },
+  { id: "galaxy", name: "Galaxy Glow", icon: "🌌", colors: ["#a56eff", "#56e9ef"], viewBoost: 8, likeBoost: 9, milestone: "views-1000" },
+];
+
+const BATTLE_RIVALS: BattleRival[] = [
+  {
+    id: "sunny-sam",
+    name: "Sunny Sam",
+    handle: "@sunnyspark",
+    title: "Happy Dance Rookie",
+    icon: "🌞",
+    outfit: "sunset",
+    hairStyle: "ponytail",
+    makeup: "blush-pop",
+    skill: 0.78,
+    rewardBonus: 40,
+    catchphrases: ["Sunshine combo!", "Let’s make this silly!", "Great move, Zoe!"],
+  },
+  {
+    id: "remy-robot",
+    name: "Remy Robot",
+    handle: "@remybeep",
+    title: "Beat Bot Challenger",
+    icon: "🤖",
+    outfit: "neon",
+    hairStyle: "bob",
+    makeup: "neon",
+    skill: 0.93,
+    rewardBonus: 65,
+    catchphrases: ["Beep boop—bonus!", "Robot rhythm activated!", "Your combo is strong!"],
+  },
+  {
+    id: "luna-loops",
+    name: "Luna Loops",
+    handle: "@lunaloops",
+    title: "Galaxy Dance Pro",
+    icon: "🌙",
+    outfit: "moon-dress",
+    hairStyle: "curls",
+    makeup: "galaxy",
+    skill: 1.08,
+    rewardBonus: 90,
+    catchphrases: ["Moon move incoming!", "Sparkles to maximum!", "This battle is close!"],
+  },
+  {
+    id: "kiki-crown",
+    name: "Queen Kiki",
+    handle: "@kikicrown",
+    title: "Creator Battle Champion",
+    icon: "👑",
+    outfit: "royal-dress",
+    hairStyle: "crown-braid",
+    makeup: "sparkle",
+    skill: 1.22,
+    rewardBonus: 140,
+    catchphrases: ["Royal combo!", "Bring your brightest move!", "You’re a true star!"],
+  },
 ];
 
 const MILESTONES: Milestone[] = [
-  { id: "views-10", metric: "views", value: 10, stars: 25, reward: "Rookie badge" },
-  { id: "likes-10", metric: "likes", value: 10, stars: 25, reward: "Heart sticker" },
-  { id: "views-100", metric: "views", value: 100, stars: 75, reward: "Sunset Jam outfit" },
-  { id: "likes-100", metric: "likes", value: 100, stars: 75, reward: "Neon Night outfit" },
-  { id: "views-1000", metric: "views", value: 1_000, stars: 200, reward: "Galaxy Glow outfit" },
-  { id: "likes-1000", metric: "likes", value: 1_000, stars: 250, reward: "Creator crown" },
+  { id: "views-10", metric: "views", value: 10, stars: 25, reward: "Rainbow dress + Beat Braids" },
+  { id: "likes-10", metric: "likes", value: 10, stars: 25, reward: "Cloud Curls + Star Sparkle" },
+  { id: "views-100", metric: "views", value: 100, stars: 75, reward: "Sunset outfit + Creator Bob" },
+  { id: "likes-100", metric: "likes", value: 100, stars: 75, reward: "Neon set + Moonlight dress" },
+  { id: "views-1000", metric: "views", value: 1_000, stars: 200, reward: "Galaxy outfit + makeup" },
+  { id: "likes-1000", metric: "likes", value: 1_000, stars: 250, reward: "Royal dress + Crown Braid" },
 ];
 
 const REACTIONS = ["💖", "⭐", "✨", "🎁", "💬", "🔥"];
@@ -175,6 +283,8 @@ function loadProfile() {
     careerLikes: 0,
     milestones: [] as string[],
     outfit: "star" as OutfitId,
+    hairStyle: "space-buns" as HairStyleId,
+    makeup: "natural" as MakeupId,
     creatorName: "Zoe",
     posts: [] as SavedPost[],
   };
@@ -194,6 +304,12 @@ function loadProfile() {
       outfit: OUTFITS.some((outfit) => outfit.id === saved.outfit)
         ? (saved.outfit as OutfitId)
         : fallback.outfit,
+      hairStyle: HAIR_STYLES.some((hair) => hair.id === saved.hairStyle)
+        ? (saved.hairStyle as HairStyleId)
+        : fallback.hairStyle,
+      makeup: MAKEUP_LOOKS.some((makeup) => makeup.id === saved.makeup)
+        ? (saved.makeup as MakeupId)
+        : fallback.makeup,
       creatorName:
         typeof saved.creatorName === "string" && saved.creatorName.trim()
           ? saved.creatorName.trim().slice(0, 18)
@@ -211,6 +327,18 @@ function loadProfile() {
                 Number.isFinite(item.score)
               );
             })
+            .map((post) => ({
+              ...post,
+              hairStyle: HAIR_STYLES.some((hair) => hair.id === post.hairStyle)
+                ? post.hairStyle
+                : ("space-buns" as HairStyleId),
+              makeup: MAKEUP_LOOKS.some((look) => look.id === post.makeup)
+                ? post.makeup
+                : ("natural" as MakeupId),
+              mode: post.mode === "battle" ? "battle" : ("solo" as GameMode),
+              rivalName:
+                typeof post.rivalName === "string" ? post.rivalName : undefined,
+            }))
             .slice(0, 12)
         : [],
     };
@@ -228,6 +356,8 @@ function saveProfile(
   careerLikes: number,
   milestones: string[],
   outfit: OutfitId,
+  hairStyle: HairStyleId,
+  makeup: MakeupId,
   creatorName: string,
   posts: SavedPost[],
 ) {
@@ -242,6 +372,8 @@ function saveProfile(
       careerLikes,
       milestones,
       outfit,
+      hairStyle,
+      makeup,
       creatorName,
       posts,
     }),
@@ -252,6 +384,7 @@ function saveProfile(
 export default function StarSparkGame() {
   const [appScreen, setAppScreen] = useState<AppScreen>("splash");
   const [status, setStatus] = useState<GameStatus>("ready");
+  const [gameMode, setGameMode] = useState<GameMode>("solo");
   const [playerLevel, setPlayerLevel] = useState(1);
   const [stars, setStars] = useState(250);
   const [fans, setFans] = useState(0);
@@ -272,6 +405,9 @@ export default function StarSparkGame() {
   const [popularity, setPopularity] = useState(55);
   const [moderatedCount, setModeratedCount] = useState(0);
   const [selectedOutfit, setSelectedOutfit] = useState<OutfitId>("star");
+  const [selectedHairStyle, setSelectedHairStyle] = useState<HairStyleId>("space-buns");
+  const [selectedMakeup, setSelectedMakeup] = useState<MakeupId>("natural");
+  const [wardrobeTab, setWardrobeTab] = useState<WardrobeTab>("outfits");
   const [careerViews, setCareerViews] = useState(0);
   const [careerLikes, setCareerLikes] = useState(0);
   const [unlockedMilestones, setUnlockedMilestones] = useState<string[]>([]);
@@ -283,6 +419,11 @@ export default function StarSparkGame() {
   const [bestScore, setBestScore] = useState(0);
   const [newBest, setNewBest] = useState(false);
   const [runReward, setRunReward] = useState<RunReward | null>(null);
+  const [battlePlayerScore, setBattlePlayerScore] = useState(0);
+  const [battleRivalScore, setBattleRivalScore] = useState(0);
+  const [rivalMove, setRivalMove] = useState<MoveId>("dance");
+  const [rivalAnimationKey, setRivalAnimationKey] = useState(0);
+  const [battleNotice, setBattleNotice] = useState("Battle invitation accepted!");
   const lastActionRef = useRef(0);
   const beatAtRef = useRef(0);
   const checkpointRef = useRef(0);
@@ -292,8 +433,13 @@ export default function StarSparkGame() {
   const usedMovesRef = useRef(new Set<MoveId>());
   const commentIdRef = useRef(0);
   const commentTurnRef = useRef(0);
+  const rivalPulseRef = useRef(0);
 
   const currentLevel = LEVELS[playerLevel - 1] ?? LEVELS[0];
+  const currentRival =
+    BATTLE_RIVALS[
+      Math.min(BATTLE_RIVALS.length - 1, Math.floor((playerLevel - 1) / 3))
+    ];
   const levelProgress = Math.min(100, Math.round((metrics.score / currentLevel.target) * 100));
   const beatMs = Math.max(535, 690 - (playerLevel - 1) * 17);
   const trendingMove = MOVES[Math.floor((currentLevel.roundSeconds - timeLeft) / 7) % MOVES.length].id;
@@ -307,6 +453,19 @@ export default function StarSparkGame() {
   const creatorRank =
     fans >= 10_000 ? "Creator Icon" : fans >= 1_000 ? "Rising Star" : fans >= 100 ? "New Favourite" : "Fresh Creator";
   const currentTrack = BACKGROUND_TRACKS[backgroundTrack];
+  const battleTotal = Math.max(1, battlePlayerScore + battleRivalScore);
+  const battlePlayerShare = Math.round((battlePlayerScore / battleTotal) * 100);
+  const selectedOutfitItem = OUTFITS.find((item) => item.id === selectedOutfit) ?? OUTFITS[0];
+  const selectedHairItem = HAIR_STYLES.find((item) => item.id === selectedHairStyle) ?? HAIR_STYLES[0];
+  const selectedMakeupItem = MAKEUP_LOOKS.find((item) => item.id === selectedMakeup) ?? MAKEUP_LOOKS[0];
+  const wardrobeViewBoost =
+    selectedOutfitItem.viewBoost + selectedHairItem.viewBoost + selectedMakeupItem.viewBoost;
+  const wardrobeLikeBoost =
+    selectedOutfitItem.likeBoost + selectedHairItem.likeBoost + selectedMakeupItem.likeBoost;
+  const wardrobeItemUnlocked = useCallback(
+    (milestone?: string) => !milestone || unlockedMilestones.includes(milestone),
+    [unlockedMilestones],
+  );
 
   const playTone = useCallback(
     (perfect = false) => {
@@ -384,7 +543,7 @@ export default function StarSparkGame() {
     });
   }, [appScreen, currentTrack.src, soundOn, status]);
 
-  const startGame = useCallback(() => {
+  const beginShow = useCallback((mode: GameMode) => {
     const music = musicRef.current;
     if (music && soundOn && typeof window !== "undefined") {
       const trackUrl = new URL(currentTrack.src, window.location.href).href;
@@ -396,6 +555,7 @@ export default function StarSparkGame() {
         // The next live-screen interaction will retry playback if required.
       });
     }
+    setGameMode(mode);
     setAppScreen("live");
     setStatus("playing");
     setTimeLeft(currentLevel.roundSeconds);
@@ -405,17 +565,26 @@ export default function StarSparkGame() {
     setPerfects(0);
     setLastMove(null);
     setActiveMove(null);
-    setFeedback(`Target: ${compact(currentLevel.target)} points`);
+    setFeedback(
+      mode === "battle"
+        ? `BATTLE START · VS ${currentRival.name.toUpperCase()}`
+        : `LOOK BOOST · +${wardrobeViewBoost}% VIEWS · +${wardrobeLikeBoost}% LIKES`,
+    );
     setQuestProgress(0);
     setNewBest(false);
     setRunReward(null);
-    setPopularity(55);
+    setPopularity(Math.min(70, 55 + Math.floor((wardrobeViewBoost + wardrobeLikeBoost) / 8)));
     setModeratedCount(0);
+    setBattlePlayerScore(0);
+    setBattleRivalScore(0);
+    setRivalMove("dance");
+    setRivalAnimationKey((current) => current + 1);
+    setBattleNotice(`${currentRival.name}: ${currentRival.catchphrases[0]}`);
     setLiveComments([
       {
         id: commentIdRef.current++,
         name: "MiaStar",
-        message: "Ready for the show! ✨",
+        message: mode === "battle" ? `Battle time! Go ${creatorName}! ⚔️` : "Ready for the show! ✨",
         tone: "positive",
       },
       {
@@ -430,8 +599,21 @@ export default function StarSparkGame() {
     checkpointRef.current = 0;
     beatAtRef.current = Date.now();
     lastActionRef.current = 0;
+    rivalPulseRef.current = 0;
     playTone(true);
-  }, [currentLevel, currentTrack.src, playTone, soundOn]);
+  }, [
+    currentLevel,
+    currentRival,
+    currentTrack.src,
+    creatorName,
+    playTone,
+    soundOn,
+    wardrobeLikeBoost,
+    wardrobeViewBoost,
+  ]);
+
+  const startGame = useCallback(() => beginShow("solo"), [beginShow]);
+  const startBattle = useCallback(() => beginShow("battle"), [beginShow]);
 
   const finishCustomization = useCallback(() => {
     const safeName = draftCreatorName.trim().slice(0, 18) || "Zoe";
@@ -478,13 +660,21 @@ export default function StarSparkGame() {
         careerViews < 10 ? 0.45 : careerViews < 100 ? 0.8 : careerViews < 1_000 ? 1.15 : 1.5;
       const funnyBoost = isFunny ? 2.75 : 1;
       const popularityFactor = 0.55 + popularity / 100;
-      const viewGain = Math.max(
+      const baseViewGain = Math.max(
         1,
         Math.round((scoreGain / 105) * discoveryRate * funnyBoost * popularityFactor),
       );
-      const likeGain = Math.max(
+      const viewGain = Math.max(
+        1,
+        Math.round(baseViewGain * (1 + wardrobeViewBoost / 100)),
+      );
+      const baseLikeGain = Math.max(
         isFunny || perfect ? 1 : 0,
         Math.round(viewGain * (0.2 + popularity / 250)),
+      );
+      const likeGain = Math.max(
+        isFunny || perfect ? 1 : 0,
+        Math.round(baseLikeGain * (1 + wardrobeLikeBoost / 100)),
       );
       const nextScore = metrics.score + scoreGain;
       const nextCheckpoint = Math.min(
@@ -495,6 +685,13 @@ export default function StarSparkGame() {
       const giftGain =
         (nextCombo > 0 && nextCombo % 5 === 0 ? 1 : 0) +
         (hitCheckpoint ? 1 : 0);
+      const battlePointGain = Math.max(
+        1,
+        Math.round(
+          (scoreGain / 14 + likeGain * 2 + giftGain * 35) *
+            (timeLeft <= 5 ? 1.5 : 1),
+        ),
+      );
       checkpointRef.current = nextCheckpoint;
 
       setCombo(nextCombo);
@@ -510,6 +707,9 @@ export default function StarSparkGame() {
         comments: current.comments + (perfect || isTrending ? 3 : 1),
         gifts: current.gifts + giftGain,
       }));
+      if (gameMode === "battle") {
+        setBattlePlayerScore((current) => current + battlePointGain);
+      }
       setCareerViews((current) => current + viewGain);
       setCareerLikes((current) => current + likeGain);
       setPopularity((current) =>
@@ -556,6 +756,7 @@ export default function StarSparkGame() {
       careerViews,
       combo,
       currentLevel.target,
+      gameMode,
       lastMove,
       metrics.score,
       playTone,
@@ -563,7 +764,10 @@ export default function StarSparkGame() {
       popularity,
       soundOn,
       status,
+      timeLeft,
       trendingMove,
+      wardrobeLikeBoost,
+      wardrobeViewBoost,
     ],
   );
 
@@ -601,6 +805,8 @@ export default function StarSparkGame() {
       setCareerLikes(profile.careerLikes);
       setUnlockedMilestones(profile.milestones);
       setSelectedOutfit(profile.outfit);
+      setSelectedHairStyle(profile.hairStyle);
+      setSelectedMakeup(profile.makeup);
       setCreatorName(profile.creatorName);
       setDraftCreatorName(profile.creatorName);
       setSavedPosts(profile.posts);
@@ -629,6 +835,8 @@ export default function StarSparkGame() {
       careerLikes,
       unlockedMilestones,
       selectedOutfit,
+      selectedHairStyle,
+      selectedMakeup,
       creatorName,
       savedPosts,
     );
@@ -641,6 +849,8 @@ export default function StarSparkGame() {
     profileReady,
     creatorName,
     savedPosts,
+    selectedHairStyle,
+    selectedMakeup,
     selectedOutfit,
     stars,
     unlockedMilestones,
@@ -709,16 +919,65 @@ export default function StarSparkGame() {
   }, [beatMs, status]);
 
   useEffect(() => {
+    if (status !== "playing" || gameMode !== "battle") return;
+    const rivalTimer = window.setInterval(() => {
+      const pulse = ++rivalPulseRef.current;
+      const finalRush = timeLeft <= 5 ? 1.65 : 1;
+      const rivalGain = Math.max(
+        1,
+        Math.round(
+          (10 + playerLevel * 1.8 + Math.random() * 10) *
+            currentRival.skill *
+            finalRush,
+        ),
+      );
+      const nextMove = MOVES[pulse % MOVES.length].id;
+      setBattleRivalScore((current) => current + rivalGain);
+      setRivalMove(nextMove);
+      setRivalAnimationKey((current) => current + 1);
+
+      if (pulse % 3 === 0) {
+        const message =
+          currentRival.catchphrases[
+            Math.floor(pulse / 3) % currentRival.catchphrases.length
+          ];
+        setBattleNotice(`${currentRival.name}: ${message}`);
+      }
+      if (pulse % 5 === 0) {
+        setLiveComments((current) => [
+          ...current.slice(-3),
+          {
+            id: commentIdRef.current++,
+            name: currentRival.name,
+            message: currentRival.catchphrases[pulse % currentRival.catchphrases.length],
+            tone: "positive",
+          },
+        ]);
+      }
+    }, 900);
+    return () => window.clearInterval(rivalTimer);
+  }, [currentRival, gameMode, playerLevel, status, timeLeft]);
+
+  useEffect(() => {
     if (status !== "playing" || timeLeft > 0) return;
     const finishTimer = window.setTimeout(() => {
-      const cleared = metrics.score >= currentLevel.target;
+      const cleared =
+        gameMode === "battle"
+          ? battlePlayerScore >= battleRivalScore
+          : metrics.score >= currentLevel.target;
       const rating = cleared
         ? 1 + Number(comboGoalMet) + Number(mixGoalMet)
         : 0;
       const moderationBonus = moderatedCount * 5;
+      const battleBonus =
+        gameMode === "battle" && cleared ? currentRival.rewardBonus : 0;
       const earnedStars =
-        (cleared ? currentLevel.rewardStars * rating : 0) + moderationBonus;
-      const earnedFans = cleared ? currentLevel.rewardFans * rating : 0;
+        (cleared ? currentLevel.rewardStars * rating : 0) +
+        moderationBonus +
+        battleBonus;
+      const earnedFans = cleared
+        ? currentLevel.rewardFans * rating + battleBonus * 2
+        : 0;
       const nextLevel = cleared
         ? Math.min(LEVELS.length, playerLevel + 1)
         : playerLevel;
@@ -727,9 +986,18 @@ export default function StarSparkGame() {
       const nextBest = Math.max(bestScore, metrics.score);
 
       setStatus("finished");
-      setFeedback(cleared ? "Level cleared!" : "So close—try the target again!");
+      setFeedback(
+        gameMode === "battle"
+          ? cleared
+            ? "Battle won!"
+            : "Great battle—rematch ready!"
+          : cleared
+            ? "Level cleared!"
+            : "So close—try the target again!",
+      );
       setRunReward({
         cleared,
+        mode: gameMode,
         rating,
         stars: earnedStars,
         fans: earnedFans,
@@ -737,6 +1005,9 @@ export default function StarSparkGame() {
         title: currentLevel.title,
         target: currentLevel.target,
         moderationBonus,
+        rivalName: gameMode === "battle" ? currentRival.name : undefined,
+        playerBattleScore: gameMode === "battle" ? battlePlayerScore : undefined,
+        rivalBattleScore: gameMode === "battle" ? battleRivalScore : undefined,
       });
       if (metrics.score > bestScore) {
         setNewBest(true);
@@ -749,12 +1020,16 @@ export default function StarSparkGame() {
         {
           id: `${Date.now()}-${currentLevel.level}`,
           outfit: selectedOutfit,
+          hairStyle: selectedHairStyle,
+          makeup: selectedMakeup,
           views: metrics.views,
           likes: metrics.likes,
           score: metrics.score,
           level: currentLevel.level,
           title: currentLevel.title,
           cleared,
+          mode: gameMode,
+          rivalName: gameMode === "battle" ? currentRival.name : undefined,
           createdAt: Date.now(),
         },
         ...current,
@@ -763,17 +1038,23 @@ export default function StarSparkGame() {
     }, 0);
     return () => window.clearTimeout(finishTimer);
   }, [
+    battlePlayerScore,
+    battleRivalScore,
     bestScore,
     burstReactions,
     comboGoalMet,
     currentLevel,
+    currentRival,
     fans,
     metrics.score,
     metrics.likes,
     metrics.views,
     mixGoalMet,
     moderatedCount,
+    gameMode,
     playerLevel,
+    selectedHairStyle,
+    selectedMakeup,
     selectedOutfit,
     stars,
     status,
@@ -832,21 +1113,25 @@ export default function StarSparkGame() {
             <div className="preview-spark preview-spark-one">✦</div>
             <div className="preview-spark preview-spark-two">♡</div>
             <div className="custom-character">
-              <ZoeCharacter outfit={selectedOutfit} />
+              <ZoeCharacter
+                outfit={selectedOutfit}
+                hairStyle={selectedHairStyle}
+                makeup={selectedMakeup}
+              />
             </div>
             <div className="custom-shadow" />
             <div className="look-badge">
-              <span>{OUTFITS.find((outfit) => outfit.id === selectedOutfit)?.icon}</span>
+              <span>{selectedOutfitItem.icon}</span>
               <div>
-                <small>LIVE LOOK</small>
-                <strong>{OUTFITS.find((outfit) => outfit.id === selectedOutfit)?.name}</strong>
+                <small>STYLE POWER</small>
+                <strong>+{wardrobeViewBoost}% views · +{wardrobeLikeBoost}% likes</strong>
               </div>
             </div>
           </div>
           <div className="customization-panel">
             <p className="eyebrow">WELCOME, CREATOR</p>
-            <h1>Make your star</h1>
-            <p>Choose a creator name and the outfit you want to wear when you go live.</p>
+            <h1>Build your look</h1>
+            <p>Mix outfits, hairstyles, and kid-friendly face sparkle. Stronger looks give your live a small discovery boost.</p>
             <label className="creator-name-field">
               <span>Creator name</span>
               <input
@@ -857,31 +1142,53 @@ export default function StarSparkGame() {
               />
               <small>{draftCreatorName.length}/18</small>
             </label>
-            <div className="custom-outfits">
+            <div className="custom-outfits wardrobe-builder">
               <div className="custom-section-title">
-                <strong>Choose an outfit</strong>
-                <small>More looks unlock as you grow</small>
+                <strong>Full wardrobe</strong>
+                <small>Milestones unlock more styles</small>
               </div>
-              <div className="custom-outfit-grid">
-                {OUTFITS.map((outfit) => {
-                  const unlocked =
-                    !outfit.milestone || unlockedMilestones.includes(outfit.milestone);
+              <div className="wardrobe-tabs" role="tablist" aria-label="Wardrobe categories">
+                <button type="button" role="tab" aria-selected={wardrobeTab === "outfits"} className={wardrobeTab === "outfits" ? "selected" : ""} onClick={() => setWardrobeTab("outfits")}>👗 Outfits</button>
+                <button type="button" role="tab" aria-selected={wardrobeTab === "hair"} className={wardrobeTab === "hair" ? "selected" : ""} onClick={() => setWardrobeTab("hair")}>🎀 Hair</button>
+                <button type="button" role="tab" aria-selected={wardrobeTab === "makeup"} className={wardrobeTab === "makeup" ? "selected" : ""} onClick={() => setWardrobeTab("makeup")}>✨ Makeup</button>
+              </div>
+              <div className="custom-outfit-grid wardrobe-grid" role="tabpanel">
+                {wardrobeTab === "outfits" && OUTFITS.map((item) => {
+                  const unlocked = wardrobeItemUnlocked(item.milestone);
                   return (
-                    <button
-                      type="button"
-                      key={outfit.id}
-                      className={selectedOutfit === outfit.id ? "selected" : ""}
-                      disabled={!unlocked}
-                      onClick={() => setSelectedOutfit(outfit.id)}
-                    >
-                      <i style={{ background: `linear-gradient(145deg, ${outfit.colors[0]}, ${outfit.colors[1]})` }}>
-                        {unlocked ? outfit.icon : "🔒"}
-                      </i>
-                      <span>{outfit.name}</span>
-                      <small>{unlocked ? (selectedOutfit === outfit.id ? "Wearing" : "Unlocked") : "Milestone reward"}</small>
+                    <button type="button" key={item.id} className={selectedOutfit === item.id ? "selected" : ""} disabled={!unlocked} onClick={() => setSelectedOutfit(item.id)}>
+                      <i style={{ background: `linear-gradient(145deg, ${item.colors[0]}, ${item.colors[1]})` }}>{unlocked ? item.icon : "🔒"}</i>
+                      <span>{item.name}</span>
+                      <small>{unlocked ? `+${item.viewBoost}% ◉ · +${item.likeBoost}% ♥` : "Milestone reward"}</small>
+                      {item.tag && <em>{item.tag}</em>}
                     </button>
                   );
                 })}
+                {wardrobeTab === "hair" && HAIR_STYLES.map((item) => {
+                  const unlocked = wardrobeItemUnlocked(item.milestone);
+                  return (
+                    <button type="button" key={item.id} className={selectedHairStyle === item.id ? "selected" : ""} disabled={!unlocked} onClick={() => setSelectedHairStyle(item.id)}>
+                      <i style={{ background: `linear-gradient(145deg, ${item.colors[0]}, ${item.colors[1]})` }}>{unlocked ? item.icon : "🔒"}</i>
+                      <span>{item.name}</span>
+                      <small>{unlocked ? `+${item.viewBoost}% ◉ · +${item.likeBoost}% ♥` : "Milestone reward"}</small>
+                    </button>
+                  );
+                })}
+                {wardrobeTab === "makeup" && MAKEUP_LOOKS.map((item) => {
+                  const unlocked = wardrobeItemUnlocked(item.milestone);
+                  return (
+                    <button type="button" key={item.id} className={selectedMakeup === item.id ? "selected" : ""} disabled={!unlocked} onClick={() => setSelectedMakeup(item.id)}>
+                      <i style={{ background: `linear-gradient(145deg, ${item.colors[0]}, ${item.colors[1]})` }}>{unlocked ? item.icon : "🔒"}</i>
+                      <span>{item.name}</span>
+                      <small>{unlocked ? `+${item.viewBoost}% ◉ · +${item.likeBoost}% ♥` : "Milestone reward"}</small>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="wardrobe-loadout">
+                <span>{selectedOutfitItem.icon} {selectedOutfitItem.name}</span>
+                <span>{selectedHairItem.icon} {selectedHairItem.name}</span>
+                <span>{selectedMakeupItem.icon} {selectedMakeupItem.name}</span>
               </div>
             </div>
             <button type="button" className="primary-button custom-continue" onClick={finishCustomization}>
@@ -909,7 +1216,7 @@ export default function StarSparkGame() {
         <section className="creator-profile">
           <div className="profile-identity">
             <div className="profile-portrait">
-              <ZoeCharacter outfit={selectedOutfit} />
+              <ZoeCharacter outfit={selectedOutfit} hairStyle={selectedHairStyle} makeup={selectedMakeup} />
             </div>
             <div className="profile-name">
               <p>{creatorRank}</p>
@@ -931,10 +1238,16 @@ export default function StarSparkGame() {
               <span>●</span>
               Go live now
             </button>
+            <button type="button" className="go-live-button battle-launch-button" onClick={startBattle}>
+              <span>⚔</span>
+              Battle {currentRival.name}
+            </button>
             <div className="next-show-card">
-              <span>UP NEXT</span>
+              <span>UP NEXT · SOLO OR BATTLE</span>
               <strong>Level {currentLevel.level} · {currentLevel.title}</strong>
               <small>{compact(currentLevel.target)} point target · Up to {compact(currentLevel.rewardFans * 3)} new fans</small>
+              <small className="next-rival">⚔ {currentRival.name} · +{currentRival.rewardBonus} ★ win bonus</small>
+              <small className="profile-style-boost">✨ Look boost: +{wardrobeViewBoost}% views · +{wardrobeLikeBoost}% likes</small>
             </div>
           </div>
           <div className="feed-heading">
@@ -946,13 +1259,23 @@ export default function StarSparkGame() {
               {savedPosts.map((post) => (
                 <article className="feed-post" key={post.id}>
                   <div className="feed-post-room">
-                    <span className="post-live">LIVE</span>
-                    <div className="post-character"><ZoeCharacter outfit={post.outfit} /></div>
+                    <span className={`post-live ${post.mode === "battle" ? "battle-post" : ""}`}>
+                      {post.mode === "battle" ? "BATTLE" : "LIVE"}
+                    </span>
+                    <div className="post-character">
+                      <ZoeCharacter outfit={post.outfit} hairStyle={post.hairStyle} makeup={post.makeup} />
+                    </div>
                     <div className="post-score">{compact(post.score)}</div>
                     <div className="post-gradient" />
                   </div>
                   <div className="post-meta">
-                    <p>{post.cleared ? `${post.title} complete! ✨` : `${post.title} practice run`}</p>
+                    <p>
+                      {post.mode === "battle"
+                        ? `${post.cleared ? "Won" : "Battled"} vs ${post.rivalName ?? "a creator"} ${post.cleared ? "🏆" : "⚔️"}`
+                        : post.cleared
+                          ? `${post.title} complete! ✨`
+                          : `${post.title} practice run`}
+                    </p>
                     <div>
                       <span>♥ {compact(post.likes)}</span>
                       <span>◉ {compact(post.views)}</span>
@@ -973,7 +1296,7 @@ export default function StarSparkGame() {
         <nav className="profile-bottom-nav" aria-label="Creator navigation">
           <button type="button" className="active"><span>♙</span>Profile</button>
           <button type="button" className="nav-live" onClick={startGame}><span>●</span>Go Live</button>
-          <button type="button" onClick={openCustomization}><span>✦</span>Outfits</button>
+          <button type="button" onClick={openCustomization}><span>✦</span>Wardrobe</button>
         </nav>
       </main>
     );
@@ -1022,7 +1345,7 @@ export default function StarSparkGame() {
 
       <section className="game-layout">
         <div className="game-column">
-          <div className={`stage-frame status-${status}`}>
+          <div className={`stage-frame status-${status} ${gameMode === "battle" ? "battle-mode" : ""}`}>
             <div className="stage-room" aria-hidden="true">
               <div className="led led-one">★</div>
               <div className="led led-two">✦</div>
@@ -1036,7 +1359,11 @@ export default function StarSparkGame() {
             <div className="live-row">
               <div className={`live-pill ${status === "playing" ? "is-live" : ""}`}>
                 <span />
-                {status === "playing" ? "LIVE" : status.toUpperCase()}
+                {status === "playing"
+                  ? gameMode === "battle"
+                    ? "BATTLE"
+                    : "LIVE"
+                  : status.toUpperCase()}
               </div>
               <div className="timer" aria-label={`${timeLeft} seconds remaining`}>
                 00:{String(timeLeft).padStart(2, "0")}
@@ -1069,7 +1396,8 @@ export default function StarSparkGame() {
               <div className="combo-meter"><i style={{ width: `${Math.min(100, combo * 5)}%` }} /></div>
             </div>
 
-            <div className={`target-hud ${levelProgress >= 100 ? "complete" : ""}`}>
+            {gameMode === "solo" ? (
+              <div className={`target-hud ${levelProgress >= 100 ? "complete" : ""}`}>
               <div>
                 <span>LEVEL {currentLevel.level} TARGET</span>
                 <b>{compact(metrics.score)} / {compact(currentLevel.target)}</b>
@@ -1084,18 +1412,65 @@ export default function StarSparkGame() {
                 <b>{popularity}%</b>
                 <div><i style={{ width: `${popularity}%` }} /></div>
               </div>
-            </div>
+              <div className="style-boost-row">
+                ✨ LOOK +{wardrobeViewBoost}% ◉ · +{wardrobeLikeBoost}% ♥
+              </div>
+              </div>
+            ) : (
+              <div className={`battle-scoreboard ${timeLeft <= 5 ? "power-round" : ""}`} aria-label={`Battle score: ${creatorName} ${battlePlayerScore}, ${currentRival.name} ${battleRivalScore}`}>
+                <div className="battle-creator-score player">
+                  <span>{creatorName}</span>
+                  <strong>{compact(battlePlayerScore)}</strong>
+                </div>
+                <div className="battle-vs">
+                  <b>VS</b>
+                  <small>{timeLeft <= 5 ? "POWER!" : "MATCH"}</small>
+                </div>
+                <div className="battle-creator-score rival">
+                  <span>{currentRival.name}</span>
+                  <strong>{compact(battleRivalScore)}</strong>
+                </div>
+                <div className="battle-balance">
+                  <i style={{ width: `${battlePlayerShare}%` }} />
+                  <em />
+                </div>
+              </div>
+            )}
 
             <div className={`beat-orb ${beat ? "beat-now" : ""}`} aria-hidden="true">
               <span>BEAT</span>
             </div>
 
-            <div className="avatar-zone">
-              <div key={animationKey} className={`performer move-${activeMove ?? "idle"}`} aria-label="Zoe performing">
-                <ZoeCharacter outfit={selectedOutfit} />
+            <div className={`avatar-zone ${gameMode === "battle" ? "battle-player-zone" : ""}`}>
+              <div className="performer-anchor">
+                <div key={animationKey} className={`performer move-${activeMove ?? "idle"}`} aria-label="Zoe performing">
+                  <ZoeCharacter outfit={selectedOutfit} hairStyle={selectedHairStyle} makeup={selectedMakeup} />
+                </div>
               </div>
               <div className="stage-shadow" />
+              {gameMode === "battle" && (
+                <div className="battle-side-name player">
+                  <b>{creatorName}</b>
+                  <span>{creatorHandle}</span>
+                </div>
+              )}
             </div>
+
+            {gameMode === "battle" && (
+              <div className="battle-rival-zone">
+                <div className="battle-rival-anchor">
+                  <div key={rivalAnimationKey} className={`performer rival-performer move-${rivalMove}`} aria-label={`${currentRival.name} performing`}>
+                    <ZoeCharacter outfit={currentRival.outfit} hairStyle={currentRival.hairStyle} makeup={currentRival.makeup} />
+                  </div>
+                </div>
+                <div className="stage-shadow" />
+                <div className="battle-rival-bubble">{battleNotice}</div>
+                <div className="battle-side-name rival">
+                  <b>{currentRival.icon} {currentRival.name}</b>
+                  <span>{currentRival.handle}</span>
+                </div>
+              </div>
+            )}
 
             <div className="feedback-burst" key={`${feedback}-${metrics.score}`}>
               {feedback}
@@ -1143,36 +1518,17 @@ export default function StarSparkGame() {
                   Build a ×{currentLevel.comboTarget} combo and mix {currentLevel.moveTarget} moves
                   for all three stars.
                 </p>
-                <div className="outfit-picker">
+                <div className="outfit-picker live-look-picker">
                   <div>
-                    <strong>Pick Zoe&apos;s live outfit</strong>
-                    <small>Milestones unlock new looks</small>
+                    <strong>Your live look</strong>
+                    <small>+{wardrobeViewBoost}% views · +{wardrobeLikeBoost}% likes</small>
                   </div>
-                  <div className="outfit-list">
-                    {OUTFITS.map((outfit) => {
-                      const unlocked =
-                        !outfit.milestone || unlockedMilestones.includes(outfit.milestone);
-                      return (
-                        <button
-                          type="button"
-                          key={outfit.id}
-                          className={selectedOutfit === outfit.id ? "selected" : ""}
-                          disabled={!unlocked}
-                          onClick={() => setSelectedOutfit(outfit.id)}
-                          aria-label={`${outfit.name}${unlocked ? "" : ", locked"}`}
-                        >
-                          <i
-                            style={{
-                              background: `linear-gradient(145deg, ${outfit.colors[0]}, ${outfit.colors[1]})`,
-                            }}
-                          >
-                            {unlocked ? outfit.icon : "🔒"}
-                          </i>
-                          <span>{outfit.name}</span>
-                        </button>
-                      );
-                    })}
+                  <div className="live-look-list">
+                    <span>{selectedOutfitItem.icon}<b>{selectedOutfitItem.name}</b></span>
+                    <span>{selectedHairItem.icon}<b>{selectedHairItem.name}</b></span>
+                    <span>{selectedMakeupItem.icon}<b>{selectedMakeupItem.name}</b></span>
                   </div>
+                  <button type="button" className="edit-live-look" onClick={openCustomization}>Edit wardrobe</button>
                 </div>
                 <div className="reward-preview">
                   <span>★ {compact(currentLevel.rewardStars)}–{compact(currentLevel.rewardStars * 3)}</span>
@@ -1222,8 +1578,11 @@ export default function StarSparkGame() {
           </div>
 
           <div className="reward-ribbon">
-            <p>Level {currentLevel.level}</p>
-            <div><small>Target</small><strong>{levelProgress}%</strong></div>
+            <p>{gameMode === "battle" ? "Creator Battle" : `Level ${currentLevel.level}`}</p>
+            <div>
+              <small>{gameMode === "battle" ? "Match" : "Target"}</small>
+              <strong>{gameMode === "battle" ? `${battlePlayerShare}%` : `${levelProgress}%`}</strong>
+            </div>
             <div><small>Best combo</small><strong>×{bestCombo}</strong></div>
             <div><small>Perfect beats</small><strong>{perfects}</strong></div>
           </div>
@@ -1232,14 +1591,21 @@ export default function StarSparkGame() {
         <aside className="side-panel">
           <section className="mission-card">
             <div className="section-heading">
-              <span>Level {currentLevel.level} goals</span>
+              <span>{gameMode === "battle" ? `Battle vs ${currentRival.name}` : `Level ${currentLevel.level} goals`}</span>
               <b>Up to {compact(currentLevel.rewardStars * 3)} ★</b>
             </div>
-            <h2>{currentLevel.title}</h2>
+            <h2>{gameMode === "battle" ? currentRival.title : currentLevel.title}</h2>
             <div className="goal-list">
-              <div className={metrics.score >= currentLevel.target ? "complete" : ""}>
-                <i>{metrics.score >= currentLevel.target ? "✓" : "1"}</i>
-                <span><b>Score target</b><small>{compact(metrics.score)} / {compact(currentLevel.target)}</small></span>
+              <div className={(gameMode === "battle" ? battlePlayerScore >= battleRivalScore : metrics.score >= currentLevel.target) ? "complete" : ""}>
+                <i>{(gameMode === "battle" ? battlePlayerScore >= battleRivalScore : metrics.score >= currentLevel.target) ? "✓" : "1"}</i>
+                <span>
+                  <b>{gameMode === "battle" ? "Beat the rival" : "Score target"}</b>
+                  <small>
+                    {gameMode === "battle"
+                      ? `${compact(battlePlayerScore)} / ${compact(battleRivalScore)}`
+                      : `${compact(metrics.score)} / ${compact(currentLevel.target)}`}
+                  </small>
+                </span>
               </div>
               <div className={comboGoalMet ? "complete" : ""}>
                 <i>{comboGoalMet ? "✓" : "2"}</i>
@@ -1302,29 +1668,64 @@ export default function StarSparkGame() {
             <div className="result-trophy">{runReward.cleared ? "★" : "✦"}</div>
             <p className="eyebrow">
               {newBest ? "NEW BEST · " : ""}
-              LEVEL {runReward.level} · {runReward.title}
+              {runReward.mode === "battle"
+                ? `CREATOR BATTLE · VS ${runReward.rivalName}`
+                : `LEVEL ${runReward.level} · ${runReward.title}`}
             </p>
-            <h2 id="result-title">{runReward.cleared ? "Level cleared!" : "Almost there!"}</h2>
+            <h2 id="result-title">
+              {runReward.mode === "battle"
+                ? runReward.cleared
+                  ? "Battle won!"
+                  : "Rival wins!"
+                : runReward.cleared
+                  ? "Level cleared!"
+                  : "Almost there!"}
+            </h2>
             <p>
-              {runReward.cleared
-                ? `Target passed with a ×${bestCombo} combo and ${questProgress} different moves.`
-                : `${compact(runReward.target - metrics.score)} more points will unlock the next level.`}
+              {runReward.mode === "battle"
+                ? `${creatorName} scored ${compact(runReward.playerBattleScore ?? 0)} match points against ${runReward.rivalName}'s ${compact(runReward.rivalBattleScore ?? 0)}.`
+                : runReward.cleared
+                  ? `Target passed with a ×${bestCombo} combo and ${questProgress} different moves.`
+                  : `${compact(runReward.target - metrics.score)} more points will unlock the next level.`}
             </p>
             <div className="result-stars" aria-label={`${runReward.rating} of 3 stars earned`}>
               {[1, 2, 3].map((star) => (
                 <span key={star} className={runReward.rating >= star ? "earned" : ""}>★</span>
               ))}
             </div>
-            <div className="result-score">{compact(metrics.score)}</div>
-            <div className="result-progress">
-              <i style={{ width: `${Math.min(100, (metrics.score / runReward.target) * 100)}%` }} />
+            <div className="result-score">
+              {compact(runReward.mode === "battle" ? runReward.playerBattleScore ?? 0 : metrics.score)}
             </div>
-            <small className="result-target">Target {compact(runReward.target)}</small>
+            <div className="result-progress">
+              <i
+                style={{
+                  width: `${runReward.mode === "battle"
+                    ? Math.round(
+                        ((runReward.playerBattleScore ?? 0) /
+                          Math.max(
+                            1,
+                            (runReward.playerBattleScore ?? 0) +
+                              (runReward.rivalBattleScore ?? 0),
+                          )) *
+                          100,
+                      )
+                    : Math.min(100, (metrics.score / runReward.target) * 100)}%`,
+                }}
+              />
+            </div>
+            <small className="result-target">
+              {runReward.mode === "battle"
+                ? `Rival ${compact(runReward.rivalBattleScore ?? 0)}`
+                : `Target ${compact(runReward.target)}`}
+            </small>
             <div className="result-grid">
               <div><span>♥</span><small>Likes</small><strong>{compact(metrics.likes)}</strong></div>
               <div><span>✦</span><small>Perfects</small><strong>{perfects}</strong></div>
               <div><span>🎁</span><small>Gifts</small><strong>{metrics.gifts}</strong></div>
               <div><span>🛡</span><small>Moderated</small><strong>{moderatedCount}</strong></div>
+            </div>
+            <div className="result-look-bonus">
+              ✨ Wardrobe boost applied: +{wardrobeViewBoost}% views · +{wardrobeLikeBoost}% likes
             </div>
             {runReward.stars > 0 && (
               <div className="reward-payout">
@@ -1339,11 +1740,11 @@ export default function StarSparkGame() {
               <button type="button" className="primary-button" onClick={viewProfile}>
                 View my profile <span>↗</span>
               </button>
-              <button type="button" className="secondary-result-button" onClick={startGame}>
-                Go live again
+              <button type="button" className="secondary-result-button" onClick={runReward.mode === "battle" ? startBattle : startGame}>
+                {runReward.mode === "battle" ? "Battle again" : "Go live again"}
               </button>
             </div>
-            <small>Your new performance post is saved to your profile.</small>
+            <small>Your new {runReward.mode === "battle" ? "battle" : "performance"} post is saved to your profile.</small>
           </div>
         </div>
       )}

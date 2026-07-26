@@ -1,4 +1,14 @@
-export type OutfitId = "star" | "bubble" | "sunset" | "neon" | "galaxy";
+export type OutfitId =
+  | "star"
+  | "bubble"
+  | "sunset"
+  | "neon"
+  | "galaxy"
+  | "rainbow-dress"
+  | "moon-dress"
+  | "royal-dress";
+export type HairStyleId = "space-buns" | "ponytail" | "braids" | "curls" | "bob" | "crown-braid";
+export type MakeupId = "natural" | "blush-pop" | "sparkle" | "neon" | "galaxy";
 
 const OUTFIT_PALETTES: Record<
   OutfitId,
@@ -11,6 +21,7 @@ const OUTFIT_PALETTES: Record<
     trim: [string, string];
     pocket: string;
     cuff: string;
+    silhouette: "street" | "dress";
   }
 > = {
   star: {
@@ -22,6 +33,7 @@ const OUTFIT_PALETTES: Record<
     trim: ["#ff76ce", "#d92d91"],
     pocket: "#842987",
     cuff: "#e7ddea",
+    silhouette: "street",
   },
   bubble: {
     hoodie: ["#fff7ff", "#ffd9f0", "#e9b6e8"],
@@ -32,6 +44,7 @@ const OUTFIT_PALETTES: Record<
     trim: ["#78f4eb", "#14a9bf"],
     pocket: "#237fae",
     cuff: "#f7cde9",
+    silhouette: "street",
   },
   sunset: {
     hoodie: ["#fffdf0", "#ffe19e", "#ffb270"],
@@ -42,6 +55,7 @@ const OUTFIT_PALETTES: Record<
     trim: ["#ff75c6", "#dc2d92"],
     pocket: "#b73370",
     cuff: "#ffe0b2",
+    silhouette: "street",
   },
   neon: {
     hoodie: ["#213060", "#283a80", "#111b49"],
@@ -52,6 +66,7 @@ const OUTFIT_PALETTES: Record<
     trim: ["#ff77e2", "#ff2cab"],
     pocket: "#3e3897",
     cuff: "#314779",
+    silhouette: "street",
   },
   galaxy: {
     hoodie: ["#4f257b", "#282264", "#111339"],
@@ -62,23 +77,68 @@ const OUTFIT_PALETTES: Record<
     trim: ["#ff8bdd", "#b831e4"],
     pocket: "#57277e",
     cuff: "#45356c",
+    silhouette: "street",
+  },
+  "rainbow-dress": {
+    hoodie: ["#fff8ff", "#ffbde9", "#d982df"],
+    pants: ["#6f5bd7", "#4737ad", "#252062"],
+    pantsDark: ["#4c3cb0", "#211c5b"],
+    shoe: ["#ffffff", "#effcff", "#b7e8ed"],
+    accent: ["#65f4ec", "#1abbd1"],
+    trim: ["#fff36d", "#ff9c32"],
+    pocket: "#b344a7",
+    cuff: "#ffd9f1",
+    silhouette: "dress",
+  },
+  "moon-dress": {
+    hoodie: ["#c6ecff", "#6a9cf6", "#6351d5"],
+    pants: ["#35316f", "#252558", "#171638"],
+    pantsDark: ["#2b285d", "#12122f"],
+    shoe: ["#fffaff", "#dce8ff", "#a8b7df"],
+    accent: ["#fff18a", "#f4ba35"],
+    trim: ["#c8f6ff", "#62c8ed"],
+    pocket: "#423b86",
+    cuff: "#a9c9fa",
+    silhouette: "dress",
+  },
+  "royal-dress": {
+    hoodie: ["#fff4be", "#f4b93f", "#e25f70"],
+    pants: ["#713091", "#4b236e", "#291744"],
+    pantsDark: ["#552671", "#25133c"],
+    shoe: ["#fffdf2", "#ffe9b2", "#d8b977"],
+    accent: ["#fff876", "#ffc12d"],
+    trim: ["#ff87d5", "#dc3a9a"],
+    pocket: "#703279",
+    cuff: "#ffe69c",
+    silhouette: "dress",
   },
 };
 
-export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId }) {
+export default function ZoeCharacter({
+  outfit = "star",
+  hairStyle = "space-buns",
+  makeup = "natural",
+}: {
+  outfit?: OutfitId;
+  hairStyle?: HairStyleId;
+  makeup?: MakeupId;
+}) {
   const palette = OUTFIT_PALETTES[outfit];
+  const isDress = palette.silhouette === "dress";
   return (
     <svg
       className="zoe-vector"
       data-outfit={outfit}
+      data-hair={hairStyle}
+      data-makeup={makeup}
       viewBox="0 0 420 720"
       role="img"
       aria-labelledby="zoe-title zoe-description"
     >
       <title id="zoe-title">Zoe, the StarSpark performer</title>
       <desc id="zoe-description">
-        A cheerful vector character with brown space buns wearing the selected
-        colourful creator outfit.
+        A cheerful vector character wearing the selected creator outfit,
+        hairstyle, and playful face sparkle.
       </desc>
       <defs>
         <linearGradient id="zoe-skin" x1="0" y1="0" x2="0.8" y2="1">
@@ -139,24 +199,30 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
           <g className="zoe-leg zoe-leg-left">
             <path
               d="M-35 4 C-43 48 -46 101 -40 151 C-37 187 -43 227 -31 258 C-18 271 16 271 29 258 C38 226 33 186 31 150 C35 99 36 47 28 4 C9 -7 -16 -7 -35 4Z"
-              fill="url(#zoe-pants)"
+              fill={isDress ? "url(#zoe-pants-dark)" : "url(#zoe-pants)"}
               className="zoe-outline"
             />
-            <path d="M-31 29 Q-3 17 26 27 M-34 164 Q-3 177 29 163 M-31 224 Q-2 211 28 224" className="zoe-detail" opacity=".42" />
-            <path
-              d="M-43 79 Q-20 67 3 78 L1 137 Q-19 148 -40 137Z"
-              fill={palette.pocket}
-              stroke="#4e214b"
-              strokeWidth="3"
-              strokeLinejoin="round"
-            />
-            <path d="M-37 91 Q-18 84 -1 90" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
-            <g transform="translate(-21 113)">
-              <circle r="14" fill="#ffd928" stroke="#8b5610" strokeWidth="3" />
-              <circle cx="-5" cy="-3" r="2.2" fill="#4b2c13" />
-              <circle cx="5" cy="-3" r="2.2" fill="#4b2c13" />
-              <path d="M-7 4 Q0 10 7 4" fill="none" stroke="#4b2c13" strokeWidth="2.4" strokeLinecap="round" />
-            </g>
+            {isDress ? (
+              <path d="M-34 164 Q-3 177 29 163 M-31 224 Q-2 211 28 224" className="zoe-detail" opacity=".3" />
+            ) : (
+              <>
+                <path d="M-31 29 Q-3 17 26 27 M-34 164 Q-3 177 29 163 M-31 224 Q-2 211 28 224" className="zoe-detail" opacity=".42" />
+                <path
+                  d="M-43 79 Q-20 67 3 78 L1 137 Q-19 148 -40 137Z"
+                  fill={palette.pocket}
+                  stroke="#4e214b"
+                  strokeWidth="3"
+                  strokeLinejoin="round"
+                />
+                <path d="M-37 91 Q-18 84 -1 90" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
+                <g transform="translate(-21 113)">
+                  <circle r="14" fill="#ffd928" stroke="#8b5610" strokeWidth="3" />
+                  <circle cx="-5" cy="-3" r="2.2" fill="#4b2c13" />
+                  <circle cx="5" cy="-3" r="2.2" fill="#4b2c13" />
+                  <path d="M-7 4 Q0 10 7 4" fill="none" stroke="#4b2c13" strokeWidth="2.4" strokeLinecap="round" />
+                </g>
+              </>
+            )}
             <path d="M-29 251 Q-2 262 27 251" fill="none" stroke="#e45acc" strokeWidth="8" strokeLinecap="round" />
             <g transform="translate(-2 255)">
               <path
@@ -176,18 +242,24 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
           <g className="zoe-leg zoe-leg-right">
             <path
               d="M-28 4 C-36 47 -35 99 -31 150 C-33 186 -38 226 -29 258 C-16 271 18 271 31 258 C43 227 37 187 40 151 C46 101 43 48 35 4 C16 -7 -9 -7 -28 4Z"
-              fill="url(#zoe-pants)"
+              fill={isDress ? "url(#zoe-pants-dark)" : "url(#zoe-pants)"}
               className="zoe-outline"
             />
-            <path d="M-26 27 Q3 17 31 29 M-29 163 Q3 177 34 164 M-28 224 Q2 211 31 224" className="zoe-detail" opacity=".42" />
-            <path
-              d="M-3 78 Q20 67 43 79 L40 137 Q19 148 -1 137Z"
-              fill={palette.pocket}
-              stroke="#4e214b"
-              strokeWidth="3"
-              strokeLinejoin="round"
-            />
-            <path d="M1 90 Q18 84 37 91" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
+            {isDress ? (
+              <path d="M-29 163 Q3 177 34 164 M-28 224 Q2 211 31 224" className="zoe-detail" opacity=".3" />
+            ) : (
+              <>
+                <path d="M-26 27 Q3 17 31 29 M-29 163 Q3 177 34 164 M-28 224 Q2 211 31 224" className="zoe-detail" opacity=".42" />
+                <path
+                  d="M-3 78 Q20 67 43 79 L40 137 Q19 148 -1 137Z"
+                  fill={palette.pocket}
+                  stroke="#4e214b"
+                  strokeWidth="3"
+                  strokeLinejoin="round"
+                />
+                <path d="M1 90 Q18 84 37 91" stroke="#eb75d9" strokeWidth="3" strokeLinecap="round" fill="none" />
+              </>
+            )}
             <path d="M-27 251 Q2 262 29 251" fill="none" stroke="#e45acc" strokeWidth="8" strokeLinecap="round" />
             <g transform="translate(2 255)">
               <path
@@ -210,16 +282,36 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
           strokeWidth="3"
         />
         <path d="M0 6 Q-3 10 0 13" fill="none" stroke="#a65539" strokeWidth="2.5" strokeLinecap="round" />
-        <path
-          d="M-66 10 Q0 -3 66 10 L62 43 Q0 53 -62 43Z"
-          fill="url(#zoe-pants)"
-          className="zoe-outline"
-        />
-        <path d="M-64 22 Q0 10 64 22" fill="none" stroke="#e969d1" strokeWidth="4" />
-        <circle cx="0" cy="20" r="8" fill="#ded2e7" stroke="#5c245b" strokeWidth="3" />
-        <path d="M-44 13 V38 M44 13 V38 M-17 12 V39 M17 12 V39" fill="none" stroke="#63206e" strokeWidth="3" />
-        <path d="M-57 40 C-53 57 -44 67 -31 74" fill="none" stroke="#d4d0dd" strokeWidth="4" strokeLinecap="round" />
-        <path d="M-56 42 C-48 56 -40 66 -29 73" fill="none" stroke="#5c5063" strokeWidth="7" strokeDasharray="2 8" strokeLinecap="round" />
+        {isDress ? (
+          <>
+            <path
+              d="M-61 4 Q0 -6 61 4 L57 30 Q0 39 -57 30Z"
+              fill="url(#zoe-pink)"
+              className="zoe-outline"
+            />
+            <path
+              d="M-56 24 C-71 50 -79 87 -82 126 C-44 145 44 145 82 126 C79 87 71 50 56 24 Q0 38 -56 24Z"
+              fill="url(#zoe-hoodie)"
+              className="zoe-outline zoe-skirt"
+            />
+            <path d="M-67 67 Q0 88 67 67 M-75 112 Q0 134 75 112" className="zoe-detail" opacity=".42" />
+            <path d="M0 36 V126 M-36 31 Q-46 78 -48 132 M36 31 Q46 78 48 132" fill="none" stroke="url(#zoe-teal)" strokeWidth="4" opacity=".75" />
+            <circle cx="0" cy="16" r="7" fill="#fff07a" stroke="#8b5610" strokeWidth="3" />
+          </>
+        ) : (
+          <>
+            <path
+              d="M-66 10 Q0 -3 66 10 L62 43 Q0 53 -62 43Z"
+              fill="url(#zoe-pants)"
+              className="zoe-outline"
+            />
+            <path d="M-64 22 Q0 10 64 22" fill="none" stroke="#e969d1" strokeWidth="4" />
+            <circle cx="0" cy="20" r="8" fill="#ded2e7" stroke="#5c245b" strokeWidth="3" />
+            <path d="M-44 13 V38 M44 13 V38 M-17 12 V39 M17 12 V39" fill="none" stroke="#63206e" strokeWidth="3" />
+            <path d="M-57 40 C-53 57 -44 67 -31 74" fill="none" stroke="#d4d0dd" strokeWidth="4" strokeLinecap="round" />
+            <path d="M-56 42 C-48 56 -40 66 -29 73" fill="none" stroke="#5c5063" strokeWidth="7" strokeDasharray="2 8" strokeLinecap="round" />
+          </>
+        )}
 
         <g transform="translate(-78 -120)">
           <g className="zoe-arm zoe-arm-left">
@@ -243,21 +335,34 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
           </g>
         </g>
 
+        {!isDress && (
+          <path
+            d="M-68 -116 C-65 -153 -42 -170 0 -170 C42 -170 65 -153 68 -116 L48 -94 H-48Z"
+            fill={palette.cuff}
+            stroke="#4e214b"
+            strokeWidth="4"
+          />
+        )}
         <path
-          d="M-68 -116 C-65 -153 -42 -170 0 -170 C42 -170 65 -153 68 -116 L48 -94 H-48Z"
-          fill={palette.cuff}
-          stroke="#4e214b"
-          strokeWidth="4"
-        />
-        <path
-          d="M-68 -125 C-81 -104 -79 -57 -63 -20 C-34 -8 34 -8 63 -20 C79 -57 81 -104 68 -125 C36 -141 -36 -141 -68 -125Z"
+          d={isDress
+            ? "M-57 -128 C-68 -103 -64 -56 -51 -17 C-26 -8 26 -8 51 -17 C64 -56 68 -103 57 -128 C29 -143 -29 -143 -57 -128Z"
+            : "M-68 -125 C-81 -104 -79 -57 -63 -20 C-34 -8 34 -8 63 -20 C79 -57 81 -104 68 -125 C36 -141 -36 -141 -68 -125Z"}
           fill="url(#zoe-hoodie)"
           className="zoe-outline"
         />
-        <path d="M-64 -83 Q0 -65 64 -83 M-57 -24 Q0 -14 57 -24" className="zoe-detail" opacity=".38" />
-        <text x="0" y="-65" textAnchor="middle" fontSize="30" fontWeight="1000" fill="#f43ba5" stroke="white" strokeWidth="1.5" paintOrder="stroke">BE</text>
-        <text x="0" y="-36" textAnchor="middle" fontSize="29" fontWeight="1000" fill="#7947dc" stroke="white" strokeWidth="1.5" paintOrder="stroke">YOU!</text>
-        <path d="M-42 -84 l-8 -8 M44 -56 l10 -4 M-42 -47 l-10 7 M39 -89 l7 -9" fill="none" stroke="#29cbd8" strokeWidth="5" strokeLinecap="round" />
+        <path d={isDress ? "M-50 -82 Q0 -68 50 -82 M-46 -25 Q0 -15 46 -25" : "M-64 -83 Q0 -65 64 -83 M-57 -24 Q0 -14 57 -24"} className="zoe-detail" opacity=".38" />
+        {isDress ? (
+          <>
+            <path d="M-25 -121 Q0 -96 25 -121" fill="none" stroke={palette.cuff} strokeWidth="7" strokeLinecap="round" />
+            <path d="M0 -100 L10 -76 L36 -74 L16 -57 L22 -31 L0 -45 L-22 -31 L-16 -57 L-36 -74 L-10 -76Z" fill="url(#zoe-gold)" stroke="#99541d" strokeWidth="3" strokeLinejoin="round" />
+          </>
+        ) : (
+          <>
+            <text x="0" y="-65" textAnchor="middle" fontSize="30" fontWeight="1000" fill="#f43ba5" stroke="white" strokeWidth="1.5" paintOrder="stroke">BE</text>
+            <text x="0" y="-36" textAnchor="middle" fontSize="29" fontWeight="1000" fill="#7947dc" stroke="white" strokeWidth="1.5" paintOrder="stroke">YOU!</text>
+            <path d="M-42 -84 l-8 -8 M44 -56 l10 -4 M-42 -47 l-10 7 M39 -89 l7 -9" fill="none" stroke="#29cbd8" strokeWidth="5" strokeLinecap="round" />
+          </>
+        )}
         <path d="M-17 -135 Q-10 -113 -8 -92 M17 -135 Q10 -113 8 -92" fill="none" stroke="#7a627f" strokeWidth="4" strokeLinecap="round" />
         <circle cx="-17" cy="-136" r="5" fill="#aee72b" />
         <circle cx="17" cy="-136" r="5" fill="#ff4eb3" />
@@ -297,40 +402,87 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
               strokeWidth="5"
               strokeLinejoin="round"
             />
-            <g className="zoe-bun zoe-bun-left">
-              <path
-                d="M-102 -71 C-105 -94 -88 -111 -68 -108 C-51 -117 -31 -103 -30 -84 C-19 -69 -29 -47 -47 -43 C-58 -31 -82 -36 -87 -50 C-97 -52 -103 -60 -102 -71Z"
-                fill="url(#zoe-hair)"
-                stroke="#4e214b"
-                strokeWidth="5"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M-91 -79 C-78 -99 -50 -99 -39 -79 C-31 -64 -46 -49 -62 -51 C-77 -53 -82 -68 -72 -77 C-63 -85 -48 -80 -48 -70"
-                fill="none"
-                stroke="#ad5425"
-                strokeWidth="7"
-                strokeLinecap="round"
-                opacity=".72"
-              />
-            </g>
-            <g className="zoe-bun zoe-bun-right">
-              <path
-                d="M102 -71 C105 -94 88 -111 68 -108 C51 -117 31 -103 30 -84 C19 -69 29 -47 47 -43 C58 -31 82 -36 87 -50 C97 -52 103 -60 102 -71Z"
-                fill="url(#zoe-hair)"
-                stroke="#4e214b"
-                strokeWidth="5"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M91 -79 C78 -99 50 -99 39 -79 C31 -64 46 -49 62 -51 C77 -53 82 -68 72 -77 C63 -85 48 -80 48 -70"
-                fill="none"
-                stroke="#ad5425"
-                strokeWidth="7"
-                strokeLinecap="round"
-                opacity=".72"
-              />
-            </g>
+            {hairStyle === "space-buns" && (
+              <>
+                <g className="zoe-bun zoe-bun-left">
+                  <path
+                    d="M-102 -71 C-105 -94 -88 -111 -68 -108 C-51 -117 -31 -103 -30 -84 C-19 -69 -29 -47 -47 -43 C-58 -31 -82 -36 -87 -50 C-97 -52 -103 -60 -102 -71Z"
+                    fill="url(#zoe-hair)"
+                    stroke="#4e214b"
+                    strokeWidth="5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M-91 -79 C-78 -99 -50 -99 -39 -79 C-31 -64 -46 -49 -62 -51 C-77 -53 -82 -68 -72 -77 C-63 -85 -48 -80 -48 -70"
+                    fill="none"
+                    stroke="#ad5425"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    opacity=".72"
+                  />
+                </g>
+                <g className="zoe-bun zoe-bun-right">
+                  <path
+                    d="M102 -71 C105 -94 88 -111 68 -108 C51 -117 31 -103 30 -84 C19 -69 29 -47 47 -43 C58 -31 82 -36 87 -50 C97 -52 103 -60 102 -71Z"
+                    fill="url(#zoe-hair)"
+                    stroke="#4e214b"
+                    strokeWidth="5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M91 -79 C78 -99 50 -99 39 -79 C31 -64 46 -49 62 -51 C77 -53 82 -68 72 -77 C63 -85 48 -80 48 -70"
+                    fill="none"
+                    stroke="#ad5425"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    opacity=".72"
+                  />
+                </g>
+              </>
+            )}
+            {hairStyle === "ponytail" && (
+              <g className="zoe-hair-extra">
+                <path d="M54 -58 C98 -75 119 -36 101 -8 C124 15 111 63 75 67 C89 42 79 18 59 8Z" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" strokeLinejoin="round" />
+                <path d="M68 -49 Q99 -37 87 -8 Q101 22 84 47" fill="none" stroke="#ad5425" strokeWidth="7" strokeLinecap="round" opacity=".7" />
+                <path d="M48 -62 Q66 -69 79 -54" fill="none" stroke="#ff63bd" strokeWidth="9" strokeLinecap="round" />
+              </g>
+            )}
+            {hairStyle === "braids" && (
+              <g className="zoe-hair-extra">
+                <path d="M-61 0 C-88 29 -86 72 -69 99 C-90 116 -72 144 -52 132 C-66 112 -54 95 -43 82 C-61 54 -52 29 -42 8Z" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
+                <path d="M61 0 C88 29 86 72 69 99 C90 116 72 144 52 132 C66 112 54 95 43 82 C61 54 52 29 42 8Z" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
+                <path d="M-61 20 Q-43 33 -62 48 Q-44 61 -62 78 Q-44 92 -60 108 M61 20 Q43 33 62 48 Q44 61 62 78 Q44 92 60 108" fill="none" stroke="#ad5425" strokeWidth="6" strokeLinecap="round" />
+                <circle cx="-58" cy="127" r="7" fill="#ff67bf" /><circle cx="58" cy="127" r="7" fill="#62eee7" />
+              </g>
+            )}
+            {hairStyle === "curls" && (
+              <g className="zoe-hair-extra">
+                {[-1, 1].map((side) => (
+                  <g key={side} transform={`scale(${side} 1)`}>
+                    <circle cx="70" cy="-36" r="25" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="4" />
+                    <circle cx="82" cy="0" r="24" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="4" />
+                    <circle cx="76" cy="39" r="22" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="4" />
+                    <circle cx="65" cy="73" r="19" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="4" />
+                  </g>
+                ))}
+              </g>
+            )}
+            {hairStyle === "bob" && (
+              <g className="zoe-hair-extra">
+                <path d="M-72 -24 C-91 17 -82 65 -49 91 L-40 62 C-56 42 -55 14 -44 -9Z" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
+                <path d="M72 -24 C91 17 82 65 49 91 L40 62 C56 42 55 14 44 -9Z" fill="url(#zoe-hair)" stroke="#4e214b" strokeWidth="5" />
+                <path d="M-60 56 Q-48 75 -38 80 M60 56 Q48 75 38 80" fill="none" stroke="#ad5425" strokeWidth="6" strokeLinecap="round" />
+              </g>
+            )}
+            {hairStyle === "crown-braid" && (
+              <g className="zoe-hair-extra">
+                <path d="M-66 -50 Q-48 -91 -18 -72 Q0 -94 18 -72 Q48 -91 66 -50" fill="none" stroke="#4e214b" strokeWidth="21" strokeLinecap="round" />
+                <path d="M-66 -50 Q-48 -91 -18 -72 Q0 -94 18 -72 Q48 -91 66 -50" fill="none" stroke="#ad5425" strokeWidth="10" strokeLinecap="round" strokeDasharray="10 8" />
+                <path d="M-62 -8 C-79 30 -75 83 -55 116 M62 -8 C79 30 75 83 55 116" fill="none" stroke="#4e214b" strokeWidth="18" strokeLinecap="round" />
+                <path d="M-62 -8 C-79 30 -75 83 -55 116 M62 -8 C79 30 75 83 55 116" fill="none" stroke="#ad5425" strokeWidth="8" strokeDasharray="8 7" strokeLinecap="round" />
+                <path d="M0 -103 L8 -87 L26 -84 L13 -71 L16 -53 L0 -61 L-16 -53 L-13 -71 L-26 -84 L-8 -87Z" fill="url(#zoe-gold)" stroke="#8b5610" strokeWidth="3" />
+              </g>
+            )}
 
             <ellipse cx="-66" cy="12" rx="12" ry="19" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
             <ellipse cx="66" cy="12" rx="12" ry="19" fill="#e99a6b" stroke="#a65539" strokeWidth="3" />
@@ -358,6 +510,12 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
             />
             <path d="M-55 -25 Q-67 -7 -60 14 M56 -23 Q67 -6 60 14" fill="none" stroke="#4b1c10" strokeWidth="7" strokeLinecap="round" />
 
+            {(makeup === "neon" || makeup === "galaxy") && (
+              <>
+                <path d="M-51 3 Q-30 -17 -8 0 Q-30 -7 -51 8Z" fill={makeup === "galaxy" ? "#a36aff" : "#52f4ee"} opacity=".48" />
+                <path d="M8 0 Q30 -17 51 3 L51 8 Q30 -7 8 0Z" fill={makeup === "galaxy" ? "#f05ed3" : "#ff69c4"} opacity=".48" />
+              </>
+            )}
             <path d="M-50 -1 Q-30 -14 -10 -2" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
             <path d="M10 -2 Q30 -14 50 -1" fill="none" stroke="#502514" strokeWidth="5" strokeLinecap="round" />
             <path d="M-47 10 Q-53 4 -56 0 M47 10 Q53 4 56 0" fill="none" stroke="#502514" strokeWidth="3" strokeLinecap="round" />
@@ -379,8 +537,30 @@ export default function ZoeCharacter({ outfit = "star" }: { outfit?: OutfitId })
             <circle cx="-40" cy="51" r="1.8" fill="#a45f4d" />
             <circle cx="49" cy="48" r="2.3" fill="#a45f4d" />
             <circle cx="40" cy="51" r="1.8" fill="#a45f4d" />
-            <ellipse cx="-42" cy="42" rx="11" ry="5" fill="#eb7e86" opacity=".24" />
-            <ellipse cx="42" cy="42" rx="11" ry="5" fill="#eb7e86" opacity=".24" />
+            <ellipse cx="-42" cy="42" rx={makeup === "blush-pop" ? 15 : 11} ry={makeup === "blush-pop" ? 8 : 5} fill="#eb668a" opacity={makeup === "blush-pop" ? ".48" : ".24"} />
+            <ellipse cx="42" cy="42" rx={makeup === "blush-pop" ? 15 : 11} ry={makeup === "blush-pop" ? 8 : 5} fill="#eb668a" opacity={makeup === "blush-pop" ? ".48" : ".24"} />
+            {makeup === "sparkle" && (
+              <>
+                <path d="M-50 29 L-46 37 L-37 38 L-44 44 L-42 53 L-50 48 L-58 53 L-56 44 L-63 38 L-54 37Z" fill="#fff26d" stroke="#c58a1f" strokeWidth="2" />
+                <circle cx="48" cy="37" r="4" fill="#63efe8" />
+                <circle cx="57" cy="43" r="2.8" fill="#ff65c2" />
+                <circle cx="48" cy="49" r="2.2" fill="#fff176" />
+              </>
+            )}
+            {makeup === "neon" && (
+              <>
+                <path d="M-48 18 Q-30 3 -12 18" fill="none" stroke="#33eade" strokeWidth="4" strokeLinecap="round" />
+                <path d="M12 18 Q30 3 48 18" fill="none" stroke="#ff59bd" strokeWidth="4" strokeLinecap="round" />
+                <path d="M-52 39 l-9 5 M52 39 l9 5" stroke="#fff16b" strokeWidth="3" strokeLinecap="round" />
+              </>
+            )}
+            {makeup === "galaxy" && (
+              <>
+                <path d="M-53 31 L-49 38 L-41 39 L-47 44 L-45 52 L-53 48 L-60 52 L-59 44 L-65 39 L-57 38Z" fill="#d987ff" stroke="#7436ad" strokeWidth="2" />
+                <path d="M49 33 L52 39 L59 40 L54 45 L56 52 L49 48 L43 52 L44 45 L39 40 L46 39Z" fill="#63f0f4" stroke="#238eaa" strokeWidth="2" />
+                <circle cx="-63" cy="25" r="2.5" fill="#fff272" /><circle cx="62" cy="27" r="2.5" fill="#ff76ce" />
+              </>
+            )}
             <path d="M-67 34 Q-80 49 -66 60" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
             <path d="M67 34 Q80 49 66 60" fill="none" stroke="url(#zoe-gold)" strokeWidth="5" />
 
