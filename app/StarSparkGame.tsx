@@ -21,8 +21,41 @@ type Reaction = {
   delay: number;
 };
 
-const ROUND_SECONDS = 45;
-const BEAT_MS = 650;
+type LevelConfig = {
+  level: number;
+  title: string;
+  target: number;
+  comboTarget: number;
+  moveTarget: number;
+  roundSeconds: number;
+  rewardStars: number;
+  rewardFans: number;
+};
+
+type RunReward = {
+  cleared: boolean;
+  rating: number;
+  stars: number;
+  fans: number;
+  level: number;
+  title: string;
+  target: number;
+};
+
+const LEVELS: LevelConfig[] = [
+  { level: 1, title: "First Spark", target: 1_500, comboTarget: 4, moveTarget: 2, roundSeconds: 35, rewardStars: 75, rewardFans: 180 },
+  { level: 2, title: "Beat Builder", target: 2_800, comboTarget: 5, moveTarget: 3, roundSeconds: 36, rewardStars: 90, rewardFans: 260 },
+  { level: 3, title: "Mix Master", target: 4_500, comboTarget: 7, moveTarget: 3, roundSeconds: 38, rewardStars: 110, rewardFans: 380 },
+  { level: 4, title: "Trend Chaser", target: 6_500, comboTarget: 8, moveTarget: 4, roundSeconds: 39, rewardStars: 130, rewardFans: 520 },
+  { level: 5, title: "Crowd Favorite", target: 9_000, comboTarget: 10, moveTarget: 4, roundSeconds: 40, rewardStars: 155, rewardFans: 700 },
+  { level: 6, title: "Viral Energy", target: 12_000, comboTarget: 12, moveTarget: 4, roundSeconds: 41, rewardStars: 180, rewardFans: 920 },
+  { level: 7, title: "Superstar", target: 15_500, comboTarget: 14, moveTarget: 5, roundSeconds: 42, rewardStars: 210, rewardFans: 1_200 },
+  { level: 8, title: "Spotlight Pro", target: 19_500, comboTarget: 16, moveTarget: 5, roundSeconds: 43, rewardStars: 245, rewardFans: 1_550 },
+  { level: 9, title: "Creator Icon", target: 24_000, comboTarget: 18, moveTarget: 5, roundSeconds: 44, rewardStars: 285, rewardFans: 2_000 },
+  { level: 10, title: "StarSpark Legend", target: 30_000, comboTarget: 20, moveTarget: 5, roundSeconds: 45, rewardStars: 350, rewardFans: 2_600 },
+];
+
+const PROFILE_KEY = "starspark-profile-v2";
 const EMPTY_METRICS: Metrics = {
   score: 0,
   likes: 0,
@@ -67,12 +100,40 @@ function loadBestScore() {
   return Number(window.localStorage.getItem("starspark-best") ?? 0);
 }
 
+function loadProfile() {
+  const fallback = { level: 1, stars: 250, fans: 0, bestScore: loadBestScore() };
+  if (typeof window === "undefined") return fallback;
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(PROFILE_KEY) ?? "");
+    return {
+      level: Math.min(LEVELS.length, Math.max(1, Number(saved.level) || 1)),
+      stars: Math.max(0, Number(saved.stars) || fallback.stars),
+      fans: Math.max(0, Number(saved.fans) || 0),
+      bestScore: Math.max(0, Number(saved.bestScore) || fallback.bestScore),
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveProfile(level: number, stars: number, fans: number, bestScore: number) {
+  window.localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({ level, stars, fans, bestScore }),
+  );
+  window.localStorage.setItem("starspark-best", String(bestScore));
+}
+
 export default function StarSparkGame() {
   const [status, setStatus] = useState<GameStatus>("ready");
-  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [stars, setStars] = useState(250);
+  const [fans, setFans] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(LEVELS[0].roundSeconds);
   const [metrics, setMetrics] = useState<Metrics>(EMPTY_METRICS);
   const [combo, setCombo] = useState(0);
   const [bestCombo, setBestCombo] = useState(0);
+  const [perfects, setPerfects] = useState(0);
   const [lastMove, setLastMove] = useState<MoveId | null>(null);
   const [activeMove, setActiveMove] = useState<MoveId | null>(null);
   const [animationKey, setAnimationKey] = useState(0);
@@ -84,14 +145,20 @@ export default function StarSparkGame() {
   const [questProgress, setQuestProgress] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [newBest, setNewBest] = useState(false);
+  const [runReward, setRunReward] = useState<RunReward | null>(null);
   const lastActionRef = useRef(0);
   const beatAtRef = useRef(0);
+  const checkpointRef = useRef(0);
   const reactionIdRef = useRef(0);
   const audioRef = useRef<AudioContext | null>(null);
   const usedMovesRef = useRef(new Set<MoveId>());
 
-  const levelProgress = Math.min(100, 68 + Math.floor(metrics.score / 190));
-  const trendingMove = MOVES[Math.floor((ROUND_SECONDS - timeLeft) / 7) % MOVES.length].id;
+  const currentLevel = LEVELS[playerLevel - 1] ?? LEVELS[0];
+  const levelProgress = Math.min(100, Math.round((metrics.score / currentLevel.target) * 100));
+  const beatMs = Math.max(535, 690 - (playerLevel - 1) * 17);
+  const trendingMove = MOVES[Math.floor((currentLevel.roundSeconds - timeLeft) / 7) % MOVES.length].id;
+  const comboGoalMet = bestCombo >= currentLevel.comboTarget;
+  const mixGoalMet = questProgress >= currentLevel.moveTarget;
   const visibleComments = useMemo(
     () =>
       Array.from({ length: 3 }, (_, index) => {
@@ -145,20 +212,23 @@ export default function StarSparkGame() {
 
   const startGame = useCallback(() => {
     setStatus("playing");
-    setTimeLeft(ROUND_SECONDS);
+    setTimeLeft(currentLevel.roundSeconds);
     setMetrics(EMPTY_METRICS);
     setCombo(0);
     setBestCombo(0);
+    setPerfects(0);
     setLastMove(null);
     setActiveMove(null);
-    setFeedback("Catch the glowing beat!");
+    setFeedback(`Target: ${compact(currentLevel.target)} points`);
     setQuestProgress(0);
     setNewBest(false);
+    setRunReward(null);
     usedMovesRef.current.clear();
+    checkpointRef.current = 0;
     beatAtRef.current = Date.now();
     lastActionRef.current = 0;
     playTone(true);
-  }, [playTone]);
+  }, [currentLevel, playTone]);
 
   const performMove = useCallback(
     (moveId: MoveId) => {
@@ -175,10 +245,20 @@ export default function StarSparkGame() {
       const multiplier = Math.max(1, nextCombo);
       const scoreGain =
         34 * multiplier + (perfect ? 90 : 0) + (isTrending ? 125 : 0);
-      const giftGain = nextCombo > 0 && nextCombo % 5 === 0 ? 1 : perfect && Math.random() > 0.72 ? 1 : 0;
+      const nextScore = metrics.score + scoreGain;
+      const nextCheckpoint = Math.min(
+        3,
+        Math.floor((nextScore / currentLevel.target) * 3),
+      );
+      const hitCheckpoint = nextCheckpoint > checkpointRef.current;
+      const giftGain =
+        (nextCombo > 0 && nextCombo % 5 === 0 ? 1 : 0) +
+        (hitCheckpoint ? 1 : 0);
+      checkpointRef.current = nextCheckpoint;
 
       setCombo(nextCombo);
       setBestCombo((current) => Math.max(current, nextCombo));
+      if (perfect) setPerfects((current) => current + 1);
       setLastMove(moveId);
       setActiveMove(moveId);
       setAnimationKey((current) => current + 1);
@@ -191,9 +271,13 @@ export default function StarSparkGame() {
       }));
 
       usedMovesRef.current.add(moveId);
-      setQuestProgress(Math.min(3, usedMovesRef.current.size));
+      setQuestProgress(usedMovesRef.current.size);
       setFeedback(
-        isTrending
+        hitCheckpoint && nextCheckpoint < 3
+          ? `CHECKPOINT ${nextCheckpoint}/3 · GIFT!`
+          : hitCheckpoint
+            ? "TARGET REACHED! ★"
+            : isTrending
           ? `TREND BOOST +${scoreGain}`
           : perfect
             ? `PERFECT! +${scoreGain}`
@@ -205,11 +289,18 @@ export default function StarSparkGame() {
       burstReactions(perfect || isTrending ? 4 : 2);
       playTone(perfect || isTrending);
     },
-    [burstReactions, combo, lastMove, playTone, status, trendingMove],
+    [burstReactions, combo, currentLevel.target, lastMove, metrics.score, playTone, status, trendingMove],
   );
 
   useEffect(() => {
-    const loadTimer = window.setTimeout(() => setBestScore(loadBestScore()), 0);
+    const loadTimer = window.setTimeout(() => {
+      const profile = loadProfile();
+      setPlayerLevel(profile.level);
+      setStars(profile.stars);
+      setFans(profile.fans);
+      setBestScore(profile.bestScore);
+      setTimeLeft(LEVELS[profile.level - 1].roundSeconds);
+    }, 0);
     return () => window.clearTimeout(loadTimer);
   }, []);
 
@@ -227,24 +318,61 @@ export default function StarSparkGame() {
       beatAtRef.current = Date.now();
       setBeat(true);
       window.setTimeout(() => setBeat(false), 160);
-    }, BEAT_MS);
+    }, beatMs);
     return () => window.clearInterval(beatTimer);
-  }, [status]);
+  }, [beatMs, status]);
 
   useEffect(() => {
     if (status !== "playing" || timeLeft > 0) return;
     const finishTimer = window.setTimeout(() => {
+      const cleared = metrics.score >= currentLevel.target;
+      const rating = cleared
+        ? 1 + Number(comboGoalMet) + Number(mixGoalMet)
+        : 0;
+      const earnedStars = cleared ? currentLevel.rewardStars * rating : 0;
+      const earnedFans = cleared ? currentLevel.rewardFans * rating : 0;
+      const nextLevel = cleared
+        ? Math.min(LEVELS.length, playerLevel + 1)
+        : playerLevel;
+      const nextStars = stars + earnedStars;
+      const nextFans = fans + earnedFans;
+      const nextBest = Math.max(bestScore, metrics.score);
+
       setStatus("finished");
-      setFeedback("Sparkling finish!");
+      setFeedback(cleared ? "Level cleared!" : "So close—try the target again!");
+      setRunReward({
+        cleared,
+        rating,
+        stars: earnedStars,
+        fans: earnedFans,
+        level: currentLevel.level,
+        title: currentLevel.title,
+        target: currentLevel.target,
+      });
       if (metrics.score > bestScore) {
-        setBestScore(metrics.score);
         setNewBest(true);
-        window.localStorage.setItem("starspark-best", String(metrics.score));
       }
-      burstReactions(8);
+      setBestScore(nextBest);
+      setStars(nextStars);
+      setFans(nextFans);
+      setPlayerLevel(nextLevel);
+      saveProfile(nextLevel, nextStars, nextFans, nextBest);
+      burstReactions(cleared ? 10 : 5);
     }, 0);
     return () => window.clearTimeout(finishTimer);
-  }, [bestScore, burstReactions, metrics.score, status, timeLeft]);
+  }, [
+    bestScore,
+    burstReactions,
+    comboGoalMet,
+    currentLevel,
+    fans,
+    metrics.score,
+    mixGoalMet,
+    playerLevel,
+    stars,
+    status,
+    timeLeft,
+  ]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -282,15 +410,16 @@ export default function StarSparkGame() {
           <div className="avatar-chip" aria-hidden="true">Z</div>
           <div className="level-copy">
             <strong>Superstar Zoe</strong>
-            <span>Level 7 · Road to 10K</span>
+            <span>Level {currentLevel.level} · {currentLevel.title}</span>
           </div>
-          <div className="level-meter" aria-label={`${levelProgress}% to level 8`}>
+          <div className="level-meter" aria-label={`${levelProgress}% of the current target`}>
             <i style={{ width: `${levelProgress}%` }} />
           </div>
         </div>
 
         <div className="wallet">
-          <span><b>★</b> {compact(1240 + metrics.score)}</span>
+          <span><b>★</b> {compact(stars)}</span>
+          <span className="fan-wallet">♥ {compact(fans)}</span>
           <button
             type="button"
             className="icon-button"
@@ -351,6 +480,18 @@ export default function StarSparkGame() {
               <div className="combo-meter"><i style={{ width: `${Math.min(100, combo * 5)}%` }} /></div>
             </div>
 
+            <div className={`target-hud ${levelProgress >= 100 ? "complete" : ""}`}>
+              <div>
+                <span>LEVEL {currentLevel.level} TARGET</span>
+                <b>{compact(metrics.score)} / {compact(currentLevel.target)}</b>
+              </div>
+              <div className="target-meter" aria-label={`${levelProgress}% of target reached`}>
+                <i style={{ width: `${levelProgress}%` }} />
+                <em style={{ left: "33.33%" }} />
+                <em style={{ left: "66.66%" }} />
+              </div>
+            </div>
+
             <div className={`beat-orb ${beat ? "beat-now" : ""}`} aria-hidden="true">
               <span>BEAT</span>
             </div>
@@ -389,9 +530,17 @@ export default function StarSparkGame() {
             {status === "ready" && (
               <div className="start-card">
                 <div className="start-spark">★</div>
-                <p className="eyebrow">45-SECOND SHOW</p>
-                <h2>Light up the live!</h2>
-                <p>Mix your moves, catch the glowing beat, and build the biggest combo.</p>
+                <p className="eyebrow">LEVEL {currentLevel.level} · {currentLevel.title}</p>
+                <h2>Reach {compact(currentLevel.target)}</h2>
+                <p>
+                  Build a ×{currentLevel.comboTarget} combo and mix {currentLevel.moveTarget} moves
+                  for all three stars.
+                </p>
+                <div className="reward-preview">
+                  <span>★ {compact(currentLevel.rewardStars)}–{compact(currentLevel.rewardStars * 3)}</span>
+                  <span>♥ {compact(currentLevel.rewardFans)}–{compact(currentLevel.rewardFans * 3)}</span>
+                  <span>{currentLevel.roundSeconds}s show</span>
+                </div>
                 <button type="button" className="primary-button" onClick={startGame}>
                   Start show <span>↗</span>
                 </button>
@@ -430,28 +579,33 @@ export default function StarSparkGame() {
           </div>
 
           <div className="reward-ribbon">
-            <p>Performance</p>
-            <div><small>Score</small><strong>{compact(metrics.score)}</strong></div>
+            <p>Level {currentLevel.level}</p>
+            <div><small>Target</small><strong>{levelProgress}%</strong></div>
             <div><small>Best combo</small><strong>×{bestCombo}</strong></div>
-            <div><small>Beat bonus</small><strong>+{combo * 25}</strong></div>
+            <div><small>Perfect beats</small><strong>{perfects}</strong></div>
           </div>
         </div>
 
         <aside className="side-panel">
           <section className="mission-card">
             <div className="section-heading">
-              <span>Today&apos;s mission</span>
-              <b>+250 ★</b>
+              <span>Level {currentLevel.level} goals</span>
+              <b>Up to {compact(currentLevel.rewardStars * 3)} ★</b>
             </div>
-            <h2>Mix master</h2>
-            <p>Use three different moves in one show.</p>
-            <div className="quest-progress" aria-label={`${questProgress} of 3 moves used`}>
-              {[0, 1, 2].map((step) => (
-                <i key={step} className={questProgress > step ? "complete" : ""}>
-                  {questProgress > step ? "✓" : step + 1}
-                </i>
-              ))}
-              <span><i style={{ width: `${(questProgress / 3) * 100}%` }} /></span>
+            <h2>{currentLevel.title}</h2>
+            <div className="goal-list">
+              <div className={metrics.score >= currentLevel.target ? "complete" : ""}>
+                <i>{metrics.score >= currentLevel.target ? "✓" : "1"}</i>
+                <span><b>Score target</b><small>{compact(metrics.score)} / {compact(currentLevel.target)}</small></span>
+              </div>
+              <div className={comboGoalMet ? "complete" : ""}>
+                <i>{comboGoalMet ? "✓" : "2"}</i>
+                <span><b>Combo target</b><small>×{bestCombo} / ×{currentLevel.comboTarget}</small></span>
+              </div>
+              <div className={mixGoalMet ? "complete" : ""}>
+                <i>{mixGoalMet ? "✓" : "3"}</i>
+                <span><b>Move variety</b><small>{questProgress} / {currentLevel.moveTarget} moves</small></span>
+              </div>
             </div>
           </section>
 
@@ -488,24 +642,47 @@ export default function StarSparkGame() {
         <p>A fictional, kid-safe creator game. Not affiliated with TikTok or any social platform.</p>
       </footer>
 
-      {status === "finished" && (
+      {status === "finished" && runReward && (
         <div className="result-overlay" role="dialog" aria-modal="true" aria-labelledby="result-title">
           <div className="result-card">
             <div className="result-rays" />
-            <div className="result-trophy">★</div>
-            <p className="eyebrow">{newBest ? "NEW BEST SCORE!" : "SHOW COMPLETE"}</p>
-            <h2 id="result-title">{metrics.score >= 3000 ? "Total superstar!" : "Sparkling finish!"}</h2>
-            <p>You mixed {questProgress} moves and reached a ×{bestCombo} combo.</p>
+            <div className="result-trophy">{runReward.cleared ? "★" : "✦"}</div>
+            <p className="eyebrow">
+              {newBest ? "NEW BEST · " : ""}
+              LEVEL {runReward.level} · {runReward.title}
+            </p>
+            <h2 id="result-title">{runReward.cleared ? "Level cleared!" : "Almost there!"}</h2>
+            <p>
+              {runReward.cleared
+                ? `Target passed with a ×${bestCombo} combo and ${questProgress} different moves.`
+                : `${compact(runReward.target - metrics.score)} more points will unlock the next level.`}
+            </p>
+            <div className="result-stars" aria-label={`${runReward.rating} of 3 stars earned`}>
+              {[1, 2, 3].map((star) => (
+                <span key={star} className={runReward.rating >= star ? "earned" : ""}>★</span>
+              ))}
+            </div>
             <div className="result-score">{compact(metrics.score)}</div>
+            <div className="result-progress">
+              <i style={{ width: `${Math.min(100, (metrics.score / runReward.target) * 100)}%` }} />
+            </div>
+            <small className="result-target">Target {compact(runReward.target)}</small>
             <div className="result-grid">
               <div><span>♥</span><small>Likes</small><strong>{compact(metrics.likes)}</strong></div>
-              <div><span>◉</span><small>Views</small><strong>{compact(metrics.views)}</strong></div>
+              <div><span>✦</span><small>Perfects</small><strong>{perfects}</strong></div>
               <div><span>🎁</span><small>Gifts</small><strong>{metrics.gifts}</strong></div>
             </div>
+            {runReward.cleared && (
+              <div className="reward-payout">
+                <span><b>+{compact(runReward.stars)}</b> stars</span>
+                <span><b>+{compact(runReward.fans)}</b> fans</span>
+              </div>
+            )}
             <button type="button" className="primary-button" onClick={startGame}>
-              Play again <span>↻</span>
+              {runReward.cleared && runReward.level < LEVELS.length ? "Next level" : "Play again"}
+              <span>↗</span>
             </button>
-            <small>Press Enter for another show</small>
+            <small>Press Enter to keep shining</small>
           </div>
         </div>
       )}
