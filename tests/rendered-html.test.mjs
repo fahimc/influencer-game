@@ -83,6 +83,10 @@ test("includes kid-safe split-screen NPC creator battles", async () => {
     new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
+  const rivalSource = await readFile(
+    new URL("../app/RivalCharacter.tsx", import.meta.url),
+    "utf8",
+  );
 
   assert.match(gameSource, /BATTLE_RIVALS/);
   assert.match(gameSource, /Battle invitation accepted/);
@@ -92,4 +96,12 @@ test("includes kid-safe split-screen NPC creator battles", async () => {
   assert.match(styles, /\.battle-scoreboard/);
   assert.match(styles, /\.battle-rival-zone/);
   assert.match(styles, /\.battle-mode/);
+  assert.match(gameSource, /RivalCharacter/);
+  assert.match(rivalSource, /rival-remy/);
+  assert.match(rivalSource, /rival-luna/);
+  assert.match(rivalSource, /rival-kiki/);
+  assert.match(rivalSource, /rival-sunny/);
+  assert.match(styles, /\.battle-step-a/);
+  assert.match(styles, /contain: layout paint style/);
+  assert.match(styles, /\.customization-screen/);
 });

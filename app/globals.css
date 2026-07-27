@@ -750,8 +750,12 @@ button:focus-visible {
   left: 50%;
   width: 2px;
   background: linear-gradient(transparent, rgba(255,255,255,.55), transparent);
-  box-shadow: 0 0 13px rgba(255, 103, 199, .8);
+  opacity: .72;
   transform: translateX(-50%);
+}
+
+.battle-mode {
+  contain: layout paint style;
 }
 
 .battle-mode .battle-player-zone,
@@ -802,7 +806,6 @@ button:focus-visible {
   background: rgba(9, 4, 23, .75);
   border: 1px solid rgba(255,255,255,.13);
   border-radius: 10px;
-  backdrop-filter: blur(9px);
 }
 
 .battle-side-name.player { left: 8px; text-align: left; }
@@ -835,6 +838,118 @@ button:focus-visible {
 .battle-mode .combo-callout strong { font-size: 34px; }
 .battle-mode .beat-orb { top: 178px; }
 .battle-mode .chat-stack { max-width: 45%; }
+
+.battle-mode .performer {
+  contain: layout paint style;
+  backface-visibility: hidden;
+  filter: none;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.battle-mode .performer .zoe-head,
+.battle-mode .performer .zoe-arm,
+.battle-mode .performer .zoe-leg,
+.battle-mode .performer .zoe-bun {
+  animation: none !important;
+}
+
+.battle-mode .stage-shadow {
+  filter: none;
+  opacity: .38;
+}
+
+.battle-mode .battle-scoreboard {
+  backdrop-filter: none;
+}
+
+.battle-mode .reaction-stream span:nth-child(n + 7) {
+  display: none;
+}
+
+.rival-vector {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rival-rig,
+.rival-arm {
+  transform-box: fill-box;
+}
+
+.rival-rig {
+  transform-origin: 50% 78%;
+}
+
+.rival-arm {
+  transform-origin: 50% 8%;
+}
+
+.battle-step-a,
+.battle-step-b {
+  --battle-x: 0px;
+  --battle-y: -6px;
+  --battle-turn: -3deg;
+  --battle-scale: 1.025;
+}
+
+.battle-step-a.move-pose,
+.battle-step-b.move-pose {
+  --battle-x: 7px;
+  --battle-y: -3px;
+  --battle-turn: 4deg;
+  --battle-scale: 1.035;
+}
+
+.battle-step-a.move-spin,
+.battle-step-b.move-spin {
+  --battle-x: 0px;
+  --battle-y: -4px;
+  --battle-turn: 11deg;
+  --battle-scale: .98;
+}
+
+.battle-step-a.move-wave,
+.battle-step-b.move-wave {
+  --battle-x: -6px;
+  --battle-y: -8px;
+  --battle-turn: -5deg;
+  --battle-scale: 1.025;
+}
+
+.battle-step-a.move-trend,
+.battle-step-b.move-trend {
+  --battle-x: 8px;
+  --battle-y: -7px;
+  --battle-turn: 6deg;
+  --battle-scale: 1.04;
+}
+
+.battle-step-a.move-silly,
+.battle-step-b.move-silly {
+  --battle-x: -8px;
+  --battle-y: -4px;
+  --battle-turn: -8deg;
+  --battle-scale: 1.035;
+}
+
+.battle-step-a.move-robot,
+.battle-step-b.move-robot {
+  --battle-x: 5px;
+  --battle-y: -5px;
+  --battle-turn: 2deg;
+  --battle-scale: 1.02;
+}
+
+.battle-mode .battle-step-a {
+  animation: battle-step-a .52s cubic-bezier(.2, .8, .3, 1) both !important;
+}
+
+.battle-mode .battle-step-b {
+  animation: battle-step-b .52s cubic-bezier(.2, .8, .3, 1) both !important;
+}
 
 .performer-anchor {
   position: absolute;
@@ -2820,6 +2935,14 @@ footer p {
 }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes result-in { from { opacity: 0; transform: translateY(30px) scale(.88); } }
+@keyframes battle-step-a {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0) scale(1); }
+  48% { transform: translate3d(var(--battle-x), var(--battle-y), 0) rotate(var(--battle-turn)) scale(var(--battle-scale)); }
+}
+@keyframes battle-step-b {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0) scale(1); }
+  48% { transform: translate3d(var(--battle-x), var(--battle-y), 0) rotate(var(--battle-turn)) scale(var(--battle-scale)); }
+}
 
 @media (max-width: 980px) {
   .topbar {
@@ -2853,6 +2976,7 @@ footer p {
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100svh;
     height: 100dvh;
     min-height: 0;
     padding-top: env(safe-area-inset-top);
@@ -2861,6 +2985,7 @@ footer p {
 
   .journey-shell {
     width: 100%;
+    height: 100svh;
     height: 100dvh;
     min-height: 0;
     overflow-y: auto;
@@ -2868,6 +2993,10 @@ footer p {
   }
 
   .splash-screen {
+    overflow: hidden;
+  }
+
+  .customization-screen {
     overflow: hidden;
   }
 
@@ -2905,22 +3034,23 @@ footer p {
   }
 
   .customization-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-rows: minmax(190px, 34dvh) minmax(0, 1fr);
+    gap: 8px;
     width: calc(100% - 16px);
+    height: calc(100% - 66px - env(safe-area-inset-top));
     min-height: 0;
-    margin: 4px auto 16px;
+    margin: 2px auto 4px;
+    overflow: hidden;
   }
 
   .customization-preview {
-    flex: 0 0 40dvh;
-    min-height: 300px;
-    border-radius: 24px;
+    min-height: 0;
+    border-radius: 22px;
   }
 
   .custom-character {
-    inset: -2% 18% 7%;
+    inset: -8% 24% 2%;
   }
 
   .look-badge {
@@ -2930,21 +3060,30 @@ footer p {
 
   .customization-panel {
     align-self: stretch;
-    padding: 24px 18px 26px;
-    border-radius: 24px;
+    min-height: 0;
+    padding: 17px 15px 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 22px;
+    scrollbar-width: thin;
   }
 
   .customization-panel h1 {
-    font-size: 38px;
+    margin-block: 5px 7px;
+    font-size: 31px;
   }
 
   .customization-panel > p:not(.eyebrow) {
-    margin-bottom: 18px;
-    font-size: 11px;
+    margin-bottom: 12px;
+    font-size: 10px;
   }
 
   .creator-name-field {
-    margin-bottom: 18px;
+    margin-bottom: 12px;
+  }
+
+  .creator-name-field input {
+    padding-block: 11px;
   }
 
   .custom-section-title small {
@@ -2953,6 +3092,7 @@ footer p {
 
   .custom-outfit-grid {
     gap: 4px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .custom-outfit-grid button {
@@ -3250,6 +3390,17 @@ footer p {
     font-size: 6px;
   }
 
+  .battle-mode .battle-player-zone,
+  .battle-rival-zone {
+    top: 24%;
+    bottom: 13%;
+  }
+
+  .battle-mode .battle-player-zone .performer-anchor,
+  .battle-rival-anchor {
+    max-width: 48vw;
+  }
+
   .target-hud > div:first-child {
     display: grid;
     gap: 1px;
@@ -3513,6 +3664,23 @@ footer p {
 }
 
 @media (max-height: 720px) and (max-width: 620px) {
+  .customization-layout {
+    grid-template-rows: minmax(150px, 29dvh) minmax(0, 1fr);
+  }
+
+  .custom-character {
+    inset: -13% 28% 0;
+  }
+
+  .look-badge {
+    padding: 6px 8px 6px 6px;
+  }
+
+  .look-badge > span {
+    width: 28px;
+    height: 28px;
+  }
+
   .topbar {
     min-height: 60px;
     padding-block: 4px;

@@ -6,6 +6,7 @@ import ZoeCharacter, {
   type MakeupId,
   type OutfitId,
 } from "./ZoeCharacter";
+import RivalCharacter, { type RivalDesignId } from "./RivalCharacter";
 
 type GameStatus = "ready" | "playing" | "paused" | "finished";
 type AppScreen = "splash" | "customize" | "profile" | "live";
@@ -98,13 +99,11 @@ type WardrobeItem<T extends string> = {
 
 type BattleRival = {
   id: string;
+  design: RivalDesignId;
   name: string;
   handle: string;
   title: string;
   icon: string;
-  outfit: OutfitId;
-  hairStyle: HairStyleId;
-  makeup: MakeupId;
   skill: number;
   rewardBonus: number;
   catchphrases: readonly string[];
@@ -195,52 +194,44 @@ const MAKEUP_LOOKS: Array<WardrobeItem<MakeupId>> = [
 const BATTLE_RIVALS: BattleRival[] = [
   {
     id: "sunny-sam",
+    design: "sunny",
     name: "Sunny Sam",
     handle: "@sunnyspark",
     title: "Happy Dance Rookie",
     icon: "🌞",
-    outfit: "sunset",
-    hairStyle: "ponytail",
-    makeup: "blush-pop",
     skill: 0.78,
     rewardBonus: 40,
     catchphrases: ["Sunshine combo!", "Let’s make this silly!", "Great move, Zoe!"],
   },
   {
     id: "remy-robot",
+    design: "remy",
     name: "Remy Robot",
     handle: "@remybeep",
     title: "Beat Bot Challenger",
     icon: "🤖",
-    outfit: "neon",
-    hairStyle: "bob",
-    makeup: "neon",
     skill: 0.93,
     rewardBonus: 65,
     catchphrases: ["Beep boop—bonus!", "Robot rhythm activated!", "Your combo is strong!"],
   },
   {
     id: "luna-loops",
+    design: "luna",
     name: "Luna Loops",
     handle: "@lunaloops",
     title: "Galaxy Dance Pro",
     icon: "🌙",
-    outfit: "moon-dress",
-    hairStyle: "curls",
-    makeup: "galaxy",
     skill: 1.08,
     rewardBonus: 90,
     catchphrases: ["Moon move incoming!", "Sparkles to maximum!", "This battle is close!"],
   },
   {
     id: "kiki-crown",
+    design: "kiki",
     name: "Queen Kiki",
     handle: "@kikicrown",
     title: "Creator Battle Champion",
     icon: "👑",
-    outfit: "royal-dress",
-    hairStyle: "crown-braid",
-    makeup: "sparkle",
     skill: 1.22,
     rewardBonus: 140,
     catchphrases: ["Royal combo!", "Bring your brightest move!", "You’re a true star!"],
@@ -434,6 +425,7 @@ export default function StarSparkGame() {
   const commentIdRef = useRef(0);
   const commentTurnRef = useRef(0);
   const rivalPulseRef = useRef(0);
+  const timeLeftRef = useRef(timeLeft);
 
   const currentLevel = LEVELS[playerLevel - 1] ?? LEVELS[0];
   const currentRival =
@@ -443,6 +435,10 @@ export default function StarSparkGame() {
   const levelProgress = Math.min(100, Math.round((metrics.score / currentLevel.target) * 100));
   const beatMs = Math.max(535, 690 - (playerLevel - 1) * 17);
   const trendingMove = MOVES[Math.floor((currentLevel.roundSeconds - timeLeft) / 7) % MOVES.length].id;
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
   const comboGoalMet = bestCombo >= currentLevel.comboTarget;
   const mixGoalMet = questProgress >= currentLevel.moveTarget;
   const badCommentCount = liveComments.filter((comment) => comment.tone === "negative").length;
@@ -496,18 +492,22 @@ export default function StarSparkGame() {
   );
 
   const burstReactions = useCallback((count: number) => {
-    const next = Array.from({ length: count }, (_, index) => ({
+    const reactionCount = gameMode === "battle" ? Math.min(4, count) : count;
+    const next = Array.from({ length: reactionCount }, (_, index) => ({
       id: reactionIdRef.current++,
       symbol: REACTIONS[(reactionIdRef.current + index) % REACTIONS.length],
       left: 62 + Math.random() * 30,
       delay: index * 70,
     }));
-    setReactions((current) => [...current.slice(-10), ...next]);
+    setReactions((current) => [
+      ...current.slice(gameMode === "battle" ? -2 : -10),
+      ...next,
+    ]);
     window.setTimeout(() => {
       const ids = new Set(next.map((reaction) => reaction.id));
       setReactions((current) => current.filter((reaction) => !ids.has(reaction.id)));
     }, 1500);
-  }, []);
+  }, [gameMode]);
 
   useEffect(() => {
     const music = new Audio();
@@ -922,7 +922,7 @@ export default function StarSparkGame() {
     if (status !== "playing" || gameMode !== "battle") return;
     const rivalTimer = window.setInterval(() => {
       const pulse = ++rivalPulseRef.current;
-      const finalRush = timeLeft <= 5 ? 1.65 : 1;
+      const finalRush = timeLeftRef.current <= 5 ? 1.65 : 1;
       const rivalGain = Math.max(
         1,
         Math.round(
@@ -956,7 +956,7 @@ export default function StarSparkGame() {
       }
     }, 900);
     return () => window.clearInterval(rivalTimer);
-  }, [currentRival, gameMode, playerLevel, status, timeLeft]);
+  }, [currentRival, gameMode, playerLevel, status]);
 
   useEffect(() => {
     if (status !== "playing" || timeLeft > 0) return;
@@ -1443,7 +1443,11 @@ export default function StarSparkGame() {
 
             <div className={`avatar-zone ${gameMode === "battle" ? "battle-player-zone" : ""}`}>
               <div className="performer-anchor">
-                <div key={animationKey} className={`performer move-${activeMove ?? "idle"}`} aria-label="Zoe performing">
+                <div
+                  key={gameMode === "solo" ? animationKey : undefined}
+                  className={`performer move-${activeMove ?? "idle"} ${gameMode === "battle" ? `battle-step-${animationKey % 2 ? "a" : "b"}` : ""}`}
+                  aria-label="Zoe performing"
+                >
                   <ZoeCharacter outfit={selectedOutfit} hairStyle={selectedHairStyle} makeup={selectedMakeup} />
                 </div>
               </div>
@@ -1459,8 +1463,11 @@ export default function StarSparkGame() {
             {gameMode === "battle" && (
               <div className="battle-rival-zone">
                 <div className="battle-rival-anchor">
-                  <div key={rivalAnimationKey} className={`performer rival-performer move-${rivalMove}`} aria-label={`${currentRival.name} performing`}>
-                    <ZoeCharacter outfit={currentRival.outfit} hairStyle={currentRival.hairStyle} makeup={currentRival.makeup} />
+                  <div
+                    className={`performer rival-performer move-${rivalMove} battle-step-${rivalAnimationKey % 2 ? "a" : "b"}`}
+                    aria-label={`${currentRival.name} performing`}
+                  >
+                    <RivalCharacter design={currentRival.design} />
                   </div>
                 </div>
                 <div className="stage-shadow" />

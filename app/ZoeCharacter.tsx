@@ -114,7 +114,7 @@ const OUTFIT_PALETTES: Record<
   },
 };
 
-export default function ZoeCharacter({
+function ZoeCharacter({
   outfit = "star",
   hairStyle = "space-buns",
   makeup = "natural",
@@ -579,3 +579,6 @@ export default function ZoeCharacter({
     </svg>
   );
 }
+
+export default memo(ZoeCharacter);
+import { memo } from "react";
