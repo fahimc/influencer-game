@@ -104,4 +104,5 @@ test("includes kid-safe split-screen NPC creator battles", async () => {
   assert.match(styles, /\.battle-step-a/);
   assert.match(styles, /contain: layout paint style/);
   assert.match(styles, /\.customization-screen/);
+  assert.match(styles, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);
 });

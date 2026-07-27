@@ -3035,6 +3035,7 @@ footer p {
 
   .customization-layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(190px, 34dvh) minmax(0, 1fr);
     gap: 8px;
     width: calc(100% - 16px);
@@ -3741,6 +3742,32 @@ footer p {
 
   .start-card > small {
     margin-top: 8px;
+  }
+}
+
+@media (max-width: 390px) {
+  .setup-step {
+    display: none;
+  }
+
+  .customization-panel {
+    padding-inline: 12px;
+  }
+
+  .look-badge {
+    right: 8px;
+    left: 8px;
+    justify-content: center;
+    max-width: calc(100% - 16px);
+  }
+
+  .look-badge strong {
+    font-size: 8px;
+  }
+
+  .custom-section-title small {
+    max-width: 48%;
+    text-align: right;
   }
 }
 
